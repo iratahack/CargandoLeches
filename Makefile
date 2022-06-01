@@ -7,5 +7,5 @@ clean:
 	rm -rf $(EXES)
 
 %:%.c
-	gcc -O2 $< -o $@
+	gcc -m32 -O2 $< -o $@
 
