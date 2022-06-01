@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <libgen.h>
 
 FILE *fi, *fo, *ft;
 unsigned char in[0x10000], mem[0x20000];
@@ -22,6 +23,7 @@ int strcasecmp(const char *a, const char *b){
 }
 
 int main(int argc, char* argv[]){
+  char *path = dirname(argv[0]);
   if( argc==1 )
     printf("\n"
     "CgTorpes v1.01, an ultra load block generator by Antonio Villena, 9 Nov 2014\n\n"
@@ -85,7 +87,7 @@ int main(int argc, char* argv[]){
     fwrite(in+1, 1, length-2, ft);
     fclose(ft);
 #ifdef __linux__ 
-    sprintf(command, "./torpes 44100 %s tmp.%s %02x 100 %d _tmp.tap > nul\n",
+    sprintf(command, "%s/torpes 44100 %s tmp.%s %02x 100 %d _tmp.tap > /dev/null\n", path,
             channel_type-1 ? (channel_type-2?"stereoinv":"stereo") : "mono",
             ext, in[0], in[0] ? 2000 : 200);
     if( system(command) )
