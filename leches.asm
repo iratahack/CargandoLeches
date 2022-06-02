@@ -20045,7 +20045,153 @@ pok18:
         DEFB    "AV"                    ; 2 bytes
         DEFS    18, $FF
 ELSE
-        DEFS    287, $FF
+        DEFS    35, $FF
+; -----------------------
+; TV TUNER VECTOR ENTRIES
+; -----------------------
+
+L3C04:  JP      L3C10
+L3C07:  JP      L3C10
+L3C0A:  JP      L3C10
+L3C0D:  JP      L3C10
+
+; ----------------
+; TV TUNER ROUTINE
+; ----------------
+; This routine generates a display showing all possible colours and emitting a continuous cycle of a 440 Hz tone for 1 second followed by silence for 1 second.
+; Its purpose is to ease the tuning in of TV sets to the Spectrum 128's RF signal. The display consists of vertical stripes of width four character squares showing each of the eight colours
+; available at both their normal and bright intensities. The display begins with white on the left progressing up to black on the right. With in each colour stripe in the first eight rows is
+; shown the year '1986' in varying ink colours. This leads to a display that shows all possible ink colours on all possible paper colours.
+
+;; TV_TUNER
+L3C10:  LD      A,$7F           ; Test for the BREAK key
+        IN      A,($FE)
+        RRA
+        RET     C               ; C=SPACE not pressed
+
+        LD      A,$FE
+        IN      A,($FE)
+        RRA
+        RET     C               ; C=SPACE not pressed
+
+        LD      A,$07
+        OUT     ($FE),A         ; Set the border to white
+
+        LD      A,$02           ; Open channel 2 (main screen)
+        CALL    $1601
+
+        XOR     A
+        LD      ($5C3C),A       ; [TV_FLAG] Signal using main screen
+
+        LD      A,$16           ; Print character 'AT'
+        RST     10H
+
+        XOR     A               ; Print character '0'
+        RST     10H
+
+        XOR     A               ; Print character '0'
+        RST     10H
+
+        LD      E,$08           ; Number of characters per colour
+        LD      B,E             ; Paper counter + 1
+        LD      D,B             ; Ink counter + 1
+
+;; TVT_ROW
+L3C34:  LD      A,B             ; Calculate the paper colour
+        DEC     A               ; Bits 3-5 of each screen attribute
+        RL      A               ; holds the paper colour; bits 0-2
+        RL      A               ; the ink colour
+        RL      A
+        ADD     A,D             ; Add the ink colour
+        DEC     A
+        LD      ($5C8F),A       ; [ATTR_T] Store as temporary attribute value
+
+        LD      HL,L3C8F        ; TVT_DATA Point to the 'year' data
+        LD      C,E             ; Get number of characters to print
+
+;; TVT_YEAR
+L3C45:  LD      A,(HL)          ; Fetch a character from the data
+        RST     10H             ; Print it
+        INC     HL
+        DEC     C
+        JR      NZ,L3C45        ; Repeat for the 8 characters
+
+        DJNZ    L3C34           ; Repeat for all colours in this row
+
+        LD      B,E             ; Reset paper colour
+        DEC     D               ; Next ink colour
+        JR      NZ,L3C34        ; Produce next row with new ink colour
+
+        LD      HL,$4800        ; Point to 2nd third of display file
+        LD      D,H
+        LD      E,L
+        INC     DE              ; Point to the next display cell
+        XOR     A
+        LD      (HL),A          ; Clear first display cell
+        LD      BC,$0FFF
+        LDIR                    ; Clear lower 2 thirds of display file
+
+        EX      DE,HL           ; HL points to start of attributes file
+        LD      DE,$5900        ; Point to 2nd third of attributes file
+        LD      BC,$0200
+        LDIR                    ; Copy screen attributes
+
+; Now that the display has been constructed, produce a continuous cycle of a 440 Hz tone for 1 second followed by a period of silence for 1 second (actually 962ms).
+
+        DI                      ; Disable interrupts so that a pure tone can be generated
+
+;; TVT_TONE
+L3C68:  LD      DE,$0370        ; DE=twice the tone frequency in Hz
+        LD      L,$07           ; Border colour of white
+
+;; TVT_DURATION
+L3C6D:  LD      BC,$0099        ; Delay for 950.4us
+
+;; TVT_PERIOD
+L3C70:  DEC     BC
+        LD      A,B
+        OR      C
+        JR      NZ,L3C70
+
+        LD      A,L
+        XOR     $10              ; Toggle the speaker output whilst
+        LD      L,A              ; preserving the border colour
+        OUT     ($FE),A
+
+        DEC     DE               ; Generate the tone for 1 second
+        LD      A,D
+        OR      E
+        JR      NZ,L3C6D
+
+; At this point the speaker is turned off, so delay for 1 second.
+
+        LD      BC,$0000         ; Delay for 480.4us
+
+;; TVT_DELAY1
+L3C83:  DEC     BC
+        LD      A,B
+        OR      C
+        JR      NZ,L3C83
+
+;; TVT_DELAY2
+L3C88:  DEC     BC               ; Delay for 480.4us
+        LD      A,B
+        OR      C
+        JR      NZ,L3C88
+
+        JR      L3C68            ; Repeat the tone cycle
+
+;; TVT_DATA
+L3C8F:  DEFB    $13, $00         ; Bright, off
+        DEFB    $31, $39         ; '1', '9'
+        DEFB    $13, $01         ; Bright, on
+        DEFB    $38, $36         ; '8', '6'
+
+; ------
+; UNUSED
+; ------
+
+        DEFS    105, $00
 ENDIF
 
 ; -------------------------------
