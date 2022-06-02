@@ -17014,14 +17014,7 @@ pok21:
         pop     af
         ret
 ELSE
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ; 30 bytes
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
+        DEFS    30, $FF
 ENDIF
 
 ; ------------------------
@@ -18805,13 +18798,7 @@ pok19:
         pop     de
         jp      pok20
 ELSE
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ; 30 bytes
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF
+        DEFS    30, $FF
 ENDIF
 
 
@@ -19785,58 +19772,7 @@ UCASE:  call    L2C8D                   ;+ ROM routine ALPHA.
         ret                             ;+ Return.
 
 ELSE
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
+        DEFS    206, $FF
 ENDIF
 
 ; ------------------------------
@@ -19929,7 +19865,6 @@ poke:
         push    iy
         ld      iy, $5c3a
         jr      pok01
-        defb    $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
 pok01:
         ld      hl, $5c78
         ex      af, af'
@@ -20108,80 +20043,9 @@ pok18:
         xor     (hl)
         jp      pok19
         DEFB    "AV"                    ; 2 bytes
-        DEFS    9, $FF
+        DEFS    18, $FF
 ELSE
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ; 270 bytes
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
+        DEFS    287, $FF
 ENDIF
 
 ; -------------------------------
