@@ -53,13 +53,13 @@
 
 ;TASM directives:
 
-#DEFINE DEFB .BYTE
-#DEFINE DEFW .WORD
-#DEFINE DEFM .TEXT
-#DEFINE DEFS .FILL
-#DEFINE END  .END
-#DEFINE EQU  .EQU
-#DEFINE ORG  .ORG
+;#DEFINE DEFB .BYTE
+;#DEFINE DEFW .WORD
+;#DEFINE DEFM .TEXT
+;#DEFINE DEFS .FILL
+;#DEFINE END  .END
+;#DEFINE EQU  .EQU
+;#DEFINE ORG  .ORG
 
 
 ; ==============================
@@ -247,7 +247,7 @@
 ; These are held in the old ZX Printer buffer at $5B00-$5BFF.
 ; Note that some of these names conflict with the system variables used by the ZX Interface 1.
 
-SWAP        EQU $5B00  ; 20   Swap paging subroutine.
+SWAP:       EQU $5B00  ; 20   Swap paging subroutine.
 YOUNGER     EQU $5B14  ;  9   Return paging subroutine.
 ONERR       EQU $5B1D  ; 18   Error handler paging subroutine.
 PIN         EQU $5B2F  ;  5   RS232 input pre-routine.
@@ -622,7 +622,7 @@ EXPT_EXP    EQU $1C8C
 CLASS_09    EQU $1CBE
 FETCH_NUM   EQU $1CDE
 USE_ZERO    EQU $1CE6
-STOP        EQU $1CEE
+STOP:       EQU $1CEE
 F_REORDER   EQU $1D16
 LOOK_PROG   EQU $1D86
 NEXT        EQU $1DAB
@@ -665,7 +665,7 @@ HL_MULT_DE  EQU $30A9
 STACK_NUM   EQU $33B4
 TEST_ZERO   EQU $34E9
 KP_SCAN     EQU $3C01
-TEST_SCREEN EQU $3C04
+TEST_SCREEN EQU $0052   ; $3C04
 CHAR_SET    EQU $3D00
 
 
@@ -6859,7 +6859,7 @@ L191A:  BIT  7,(IY+$01)   ; The syntax/run flag is read.
 
 L1927:  POP  AF           ; Drop the return address.
         LD   A,($5C74)    ; T_ADDR.
-        SUB  (L177F & $00FF)+$28 ; Reduce to range $D9-$DE which are the token codes for INK to OVER.
+        SUB  +(L177F & $00FF)+$28 ; Reduce to range $D9-$DE which are the token codes for INK to OVER.
         RST  28H          ;
         DEFW CO_TEMP_4    ; $21FC. Change the temporary colours as directed by the BASIC statement.
         CALL L18A1        ; Move on to the next statement if checking syntax.
@@ -17457,7 +17457,7 @@ L3FEF:  DEFB $00
 
 L3FFF:  DEFB $01         ;
 
-        END
+;        END
 
 
 ; ==============================
