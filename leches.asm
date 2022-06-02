@@ -1,7 +1,7 @@
 ;        DEFINE  easy
         DEFINE  copymsg
 ;        DEFINE  resetplay
-        DEFINE  pokemon
+;        DEFINE  pokemon
         defc    CADEN=$5800-6
 
 ;        OUTPUT  leches.rom
@@ -19786,8 +19786,6 @@ UCASE:  call    L2C8D                   ;+ ROM routine ALPHA.
 
 ELSE
         DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ; 215 bytes
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
                                         ;
         DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
                                         ;
@@ -19837,7 +19835,7 @@ ELSE
                                         ;
         DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
                                         ;
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF
+        DEFB    $FF, $FF, $FF, $FF, $FF, $FF
                                         ;
 ENDIF
 
@@ -20110,6 +20108,7 @@ pok18:
         xor     (hl)
         jp      pok19
         DEFB    "AV"                    ; 2 bytes
+        DEFS    9, $FF
 ELSE
         DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
                                         ; 270 bytes
@@ -20179,7 +20178,10 @@ ELSE
                                         ;
         DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
                                         ;
-        DEFB    $FF, $FF, $FF
+        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+                                        ;
+        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF
+                                        ;
 ENDIF
 
 ; -------------------------------
