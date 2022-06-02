@@ -1,9 +1,9 @@
         DEFINE  easy
         DEFINE  resetplay
         DEFINE  pokemon
-        DEFINE  lenp  $c0       ; $40 if ZX Spectrum 16K
+        defc  lenp=$c0       ; $40 if ZX Spectrum 16K
 
-        OUTPUT  48.rom
+;        OUTPUT  48.rom
 
 ;************************************************************************
 ;** An Assembly File Listing to generate a 16K ROM for the ZX Spectrum **
@@ -2016,7 +2016,7 @@ L0605:  POP     AF              ; discard address STMT-RET.
 ;   Now reduce the low byte of the Syntax table entry to give command.
 ;   Note. For ZASM use SUB $E0 as next instruction.
 
-L0609:  SUB     (L1ADF+1) % 256 ; subtract the known offset.
+L0609:  SUB     +(L1ADF+1) % 256 ; subtract the known offset.
                                 ; ( is SUB $E0 in standard ROM )
 
         LD      ($5C74),A       ; and put back in T_ADDR as 0,1,2, or 3
@@ -5589,7 +5589,7 @@ L1201:  LD      ($5CB2),HL      ; set system variable RAMTOP to HL.
 
         JR      L1303-11        ; jump to one instruction before MAIN-4
 
-        DEFM    'Reset&Play, Antonio Villena 2012'; 32 bytes
+        DEFB    "Reset&Play, Antonio Villena 2012"; 32 bytes
 
 L129D:  DEFB    $EF, $22, $22, $0D, $80; LOAD "" + Enter + $80
     ELSE
@@ -8887,7 +8887,7 @@ L1C96:  BIT     7,(IY+$01)      ; test FLAGS - checking syntax only ?
 
 ; Note. For ZASM assembler replace following expression with SUB $13.
 
-L1CA5:  SUB     (L1AEB-$D8)%256 ; convert $EB to $D8 ('INK') etc.
+L1CA5:  SUB     +(L1AEB-$D8)%256 ; convert $EB to $D8 ('INK') etc.
                                 ; ( is SUB $13 in standard ROM )
 
         CALL    L21FC           ; routine CO-TEMP-4
@@ -19522,11 +19522,13 @@ UCASE:  call    L2C8D           ;+ ROM routine ALPHA.
         ret                     ;+ Return.
       ENDIF
 
-        block   $3948-$, $ff
+;        block   $3948-$, $ff
+        defs   $3948-$, $ff
 
       IFDEF pokemon
-        DEFINE  caden   $5800-6
-poke    ld      (caden-2), sp
+        defc  caden=$5800-6
+poke:
+        ld      (caden-2), sp
         ld      sp, caden-15-1
         push    bc
         push    de
@@ -19536,7 +19538,8 @@ poke    ld      (caden-2), sp
         ld      iy, $5c3a
         jr      pok01
         defb    $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-pok01   ld      hl, $5c78
+pok01:
+        ld      hl, $5c78
         ex      af, af'
         push    af
         ld      sp, $5700
@@ -19558,7 +19561,8 @@ pok01   ld      hl, $5c78
         ld      a, $18
         jp      po, pok02
         ld      a, l
-pok02   ld      r, a
+pok02:
+        ld      r, a
         ld      i, a
         ld      d, (hl)
         ld      (hl), b
@@ -19581,19 +19585,24 @@ pok02   ld      r, a
         push    bc
         ld      hl, caden
         xor     a
-pok03   ld      (hl), b
-pok04   inc     l
+pok03:
+           ld      (hl), b
+pok04:
+           inc     l
         jr      nz, pok03
         or      a
         ld      l, caden & $ff
         ld      (hl), l
-pok05   ld      de, caden+1
+pok05:
+        ld      de, caden+1
         jr      z, pok06
         ld      (de), a
         ld      (hl), 2
-pok06   ld      hl, $4000
+pok06:
+        ld      hl, $4000
         ld      b, 5
-pok07   push    de
+pok07:
+        push    de
         ex      de, hl
         ld      l, (hl)
         add     hl, hl
@@ -19607,7 +19616,8 @@ pok07   push    de
         djnz    pok07
         ld      hl, $5c3b
         ei
-pok08   bit     5, (hl)
+pok08:
+        bit     5, (hl)
         jr      z, pok08
         di
         res     5, (hl)
@@ -19623,28 +19633,35 @@ pok08   bit     5, (hl)
         xor     a
         dec     c
         dec     (hl)
-pok09   inc     (hl)
+pok09:
+        inc     (hl)
         jp      m, pok03
         add     hl, bc
         ld      (hl), a
         xor     a
         jr      pok05
-pok10   inc     l
-pok11   add     a, -10
-pok12   inc     (hl)
+pok10:
+        inc     l
+pok11:
+        add     a, -10
+pok12:
+        inc     (hl)
         jr      c, pok11
         jp      c, $ffff
         inc     l
-pok13   add     a, 10+$30
+pok13:
+        add     a, 10+$30
         ld      (hl), a
         xor     a
         jr      pok04
-pok14   dec     c
+pok14:
+        dec     c
         jp      m, pok18
         ld      b, c
         ex      de, hl
         ld      h, l
-pok15   inc     e
+pok15:
+        inc     e
         ld      a, (de)
         and     $0f
         push    bc
@@ -19670,7 +19687,8 @@ pok15   inc     e
         ex      de, hl
         ld      (hl), e
         inc     hl
-pok16   push    hl
+pok16:
+        push    hl
         ld      a, (hl)
         ld      hl, caden+2
         ld      (hl), $2f
@@ -19686,8 +19704,10 @@ pok16   push    hl
         add     a, 90
         jr      nc, pok13
         jr      pok12
-pok17   ex      af, af'
-pok18   ld      c, 11
+pok17:
+        ex      af, af'
+pok18:
+        ld      c, 11
         pop     hl
         ld      hl, caden-15
         ld      de, $5c00
@@ -19724,7 +19744,8 @@ pok18   ld      c, 11
         ld      ($5c78), hl
         ex      af, af'
         jp      z, save
-pok19   ld      sp, $57e0
+pok19:
+        ld      sp, $57e0
         pop     af
         ex      af, af'
         pop     iy
@@ -19734,11 +19755,14 @@ pok19   ld      sp, $57e0
         ld      a, r
         jp      p, pok20
         ei
-pok20   ld      sp, (caden-2)
+pok20:
+        ld      sp, (caden-2)
         pop     af
         ret
-tab01   defb    $ff, $00, $00, $00, $ff, $00, $00, $00, $00, $23, $05
-tab02   defb    $00, $10, $01, 'snapshot'
+tab01:
+        defb    $ff, $00, $00, $00, $ff, $00, $00, $00, $00, $23, $05
+tab02:
+        defb    $00, $10, $01, "snapshot"
         defb    $27, $00, $00, $00, $27, $00
 
 ;56d9   $3e, 0                            i     ld  a, i
@@ -19754,7 +19778,8 @@ tab02   defb    $00, $10, $01, 'snapshot'
 ;56f7   $21, $00, $40                           ld  de, $c000
 ;56fa   $31, $00, $58                           ld  sp, $5800
 ;56fd   $c3, $f4, $07                           jp  $07f4
-tab03   defb    $3e, 0,   $ed, $47, $de, $c0, $37, $0e, $8f, $39
+tab03:
+        defb    $3e, 0,   $ed, $47, $de, $c0, $37, $0e, $8f, $39
         defb    $96, $01, 0,   0,   $11, 0,   0,   $21, 0,   0
         defb    $d9, $ed, $56, $fd, $21, 0,   0,   $11, $00, lenp
         defb    $21, $00, $40, $31, $00, $58, $c3, $f4, $07
@@ -19770,7 +19795,8 @@ tab03   defb    $3e, 0,   $ed, $47, $de, $c0, $37, $0e, $8f, $39
 ;56ff   $c9                                     ret
 
 
-tab04   defb    $21, 0,   0,   $e5, $f1, $08, $01, 0,   0,   $11
+tab04:
+        defb    $21, 0,   0,   $e5, $f1, $08, $01, 0,   0,   $11
         defb    0,   0,   $dd, $21, 0,   0,   $21, 0,   0,   $e5
         defb    $f1, $21, 0,   0,   $31, 0,   0,   $f3, $c9
 
@@ -19805,7 +19831,8 @@ tab04   defb    $21, 0,   0,   $e5, $f1, $08, $01, 0,   0,   $11
 
         defb    $ff, $ff, $ff
 
-save    ld      sp, $5800
+save:
+        ld      sp, $5800
         push    ix
         ld      ix, tab02
         ld      de, $0011
@@ -19829,7 +19856,8 @@ save    ld      sp, $5800
         or      a
         jr      z, sav01
         set     3, (ix+$16)
-sav01   ld      hl, ($57e2)
+sav01:
+        ld      hl, ($57e2)
         ld      ($56f2), hl
         ld      a, $ff
         call    $04c6
@@ -19859,7 +19887,8 @@ sav01   ld      hl, ($57e2)
         ld      a, i
         jp      pe, sav02
         set     3, (ix-3)     ;iff
-sav02   ld      hl, ($57f8)
+sav02:
+        ld      hl, ($57f8)
         ld      ($56fc), hl   ;sp
         ld      ix, $4000
         ld      de, lenp*256
@@ -19868,13 +19897,15 @@ sav02   ld      hl, ($57f8)
         ld      ix, ($56f1)
         jp      pok19
 
-        block   $3cde-$, $ff
+;        block   $3cde-$, $ff
+        defs   $3cde-$, $ff
         ld      ($57ec), a
         jp      $0038
 
       ENDIF
 
-        block   $3d00-$, $ff
+;        block   $3d00-$, $ff
+        defs   $3d00-$, $ff
 
 ; -------------------------------
 ; THE 'ZX SPECTRUM CHARACTER SET'
