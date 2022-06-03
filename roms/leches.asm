@@ -1,7 +1,7 @@
 ;        DEFINE  easy
         DEFINE  copymsg
 ;        DEFINE  resetplay
-;        DEFINE  pokemon
+        DEFINE  pokemon
         defc    CADEN=$5800-6
 
 ;        OUTPUT  leches.rom
@@ -19862,6 +19862,8 @@ poke:
         push    iy
         ld      iy, $5c3a
         jr      pok01
+        DEFS    $3c04 - $, $FF
+        ret                     ; TEST_SCREEN entry point
 pok01:
         ld      hl, $5c78
         ex      af, af'
@@ -19928,11 +19930,11 @@ pok06:
 pok07:
         push    de
         ex      de, hl
-        ld      l, (hl)
-        add     hl, hl
-        ld      h, 15
-        add     hl, hl
-        add     hl, hl
+        ld      l, (hl)                 ; Char to display
+        add     hl, hl                  ; x 2
+        add     hl, hl                  ; x 4
+        add     hl, hl                  ; x 8
+        ld      h, L3D00>>8             ; Upper 8-bits of the font address
         ex      de, hl
         call    L0B99
         pop     de
