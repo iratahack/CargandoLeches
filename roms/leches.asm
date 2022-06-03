@@ -1,7 +1,7 @@
 ;        DEFINE  easy
         DEFINE  copymsg
 ;        DEFINE  resetplay
-        DEFINE  pokemon
+;        DEFINE  pokemon
         defc    CADEN=$5800-6
 
 ;        OUTPUT  leches.rom
