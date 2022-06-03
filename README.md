@@ -12,12 +12,14 @@ Z88DK must be installed and included in the path to build the ROM images. GCC is
 
 ## ROM Images
 
-Pre-build ROM images can be found in the [*binaries*](binaries) folder.
+Pre-build ROM images can be found in the [*binaries*](binaries) folder. For 48K systems use the [leches.rom](binaries/leches.rom) image. For 128K systems use either [Spectrum128_ROM0.rom](binaries/Spectrum128_ROM0.rom) or [Spectrum128_ROM0_BugFixed.rom](binaries/Spectrum128_ROM0_BugFixed.rom) for ROM-0 and [leches.rom](binaries/leches.rom) for ROM-1.
 
 ## Usage
 
-When using emulators like [FUSE](http://fuse-emulator.sourceforge.net/) the fastest loading speeds can be used. But, when using real hardware a lower speed may be required. I have found the following command line options work well when loading via iPhone to a Harlequin 128.
+When using emulators like [FUSE](http://fuse-emulator.sourceforge.net/) the fastest loading speeds can be used. But, when using real hardware a lower speed may be required. I have found the following command line options work well when loading via iPhone to a Harlequin 128. Valid speed values are 0-7, the lower the number the faster the load.
 
 ```bash
 ./CgLeches <input.tap> <output.wav> 6
 ```
+
+Type `./CgLeches` to see the build-in help.
