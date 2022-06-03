@@ -17013,10 +17013,9 @@ pok21:
         ld      sp, (CADEN-2)
         pop     af
         ret
-ELSE
-        DEFS    30, $FF
 ENDIF
 
+        DEFS    $33e0 - $, $FF
 ; ------------------------
 ; THE 'TABLE OF CONSTANTS'
 ; ------------------------
@@ -18797,10 +18796,9 @@ pok19:
         ld      (hl), d
         pop     de
         jp      pok20
-ELSE
-        DEFS    30, $FF
 ENDIF
 
+        DEFS    $389f - $, $FF
 
 ; ------------------------
 ; THE 'MODULUS' SUBROUTINE
@@ -19771,10 +19769,9 @@ UCASE:  call    L2C8D                   ;+ ROM routine ALPHA.
         set     7, c                    ;+ invert flag if alpha
         ret                             ;+ Return.
 
-ELSE
-        DEFS    206, $FF
 ENDIF
 
+        DEFS    $3bc0 - $, $FF
 ; ------------------------------
 ; THE 'SERIES GENERATOR' ROUTINE
 ; ------------------------------
@@ -20043,9 +20040,8 @@ pok18:
         xor     (hl)
         jp      pok19
         DEFB    "AV"                    ; 2 bytes
-        DEFS    18, $FF
 ELSE
-        DEFS    35, $FF
+        DEFS    $3c04 - $, $FF
 ; -----------------------
 ; TV TUNER VECTOR ENTRIES
 ; -----------------------
@@ -20191,9 +20187,9 @@ L3C8F:  DEFB    $13, $00         ; Bright, off
 ; UNUSED
 ; ------
 
-        DEFS    105, $00
 ENDIF
 
+        DEFS    $3d00 - $, $FF
 ; -------------------------------
 ; THE 'ZX SPECTRUM CHARACTER SET'
 ; -------------------------------
