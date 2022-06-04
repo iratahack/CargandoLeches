@@ -1,7 +1,7 @@
 ;        DEFINE  easy
         DEFINE  copymsg
 ;        DEFINE  resetplay
-;        DEFINE  pokemon
+        DEFINE  pokemon
         defc    CADEN=$5800-6
 
 ;        OUTPUT  leches.rom
@@ -247,14 +247,12 @@ L0055:  LD      (IY+$00), L             ; Store it in the system variable ERR_NR
 L005F:  DEFB    $FF, $FF, $FF           ; Unused locations
         DEFB    $FF, $FF, $FF           ; before the fixed-position
         DEFB    $FF                     ; NMI routine.
+
+L0066:
 IFDEF   pokemon
-        push    af
-        ld      a, ($5c8f)
-        cp      $39
-        jp      nz, poke
-        ld      a, 0
+        jp      poke
 ELSE
-L0066:  PUSH    AF                      ; save the
+        push    AF
         PUSH    HL                      ; registers.
         LD      HL, ($5CB0)             ; fetch the system variable NMIADD.
         LD      A, H                    ; test address
@@ -266,9 +264,11 @@ L0066:  PUSH    AF                      ; save the
 
 ;; NO-RESET
 L0070:  POP     HL                      ; restore the
-ENDIF
         POP     AF                      ; registers.
         RETN                            ; return to previous interrupt state.
+ENDIF
+
+        DEFS    $0074 - $, $FF
 
 ; ---------------------------
 ; THE 'CH ADD + 1' SUBROUTINE
@@ -16728,15 +16728,7 @@ L32A9:  DEFB    $38                     ;;end-calc              -4.
 
         RET                             ; return.
 
-IFDEF   pokemon
-tab01:
-        defb    $ff, $00, $00, $00, $ff, $00, $00, $00, $00, $23, $05
-ELSE
-        DEFB    $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-                                        ;
-ENDIF
-
-        DEFB    $FF                     ; 1 byte
+        DEFS    $32b7 - $, $FF
 
 ; ----------------------
 ; THE 'TANGENT' FUNCTION
@@ -16992,26 +16984,18 @@ L33BF:  IN      L, (C)
 
 
 IFDEF   pokemon
-pok20:
-        dec     l
-        ld      (hl), d
-        dec     l
-        ld      (hl), e
-        pop     hl
-        ld      ($5c78), hl
-        ld      sp, $57e0
-        pop     af
-        ex      af, af'
-        pop     iy
-        pop     hl
-        pop     de
-        pop     bc
-        ld      a, r
-        jp      p, pok21
-        ei
-pok21:
-        ld      sp, (CADEN-2)
-        pop     af
+displayPrompt:
+        call    resetCursor
+        ld      b, 5
+clearEntry_2:
+        ld      a, '-'
+        call    printChar
+        djnz    clearEntry_2
+        ret
+
+resetCursor:
+        xor     a
+        call    updateCursor
         ret
 ENDIF
 
@@ -18776,26 +18760,58 @@ ULTR9:  XOR     (HL)
         RET
 
 IFDEF   pokemon
-pok19:
-        and     %00000111
-        xor     (hl)
-        dec     l
-        ld      c, l
-        ld      (hl), a
-        ld      de, $5803
-        lddr
-        pop     de
-        ld      hl, $5c41
-        ld      (hl), d
-        ld      l, $3b
-        ld      (hl), e
-        pop     de
-        ld      l, $91
-        ld      a, e
-        ld      i, a
-        ld      (hl), d
-        pop     de
-        jp      pok20
+mul_de_bc:
+;; http://cpctech.cpc-live.com/docs/mult.html
+;; multiply DE and BC
+;; DE is equivalent to the number in the top row in our algorithm
+;; and BC is equivalent to the number in the bottom row in our algorithm
+
+        ld      a,16                    ; this is the number of bits of the number to process
+        ld      hl,0                    ; HL is updated with the partial result, and at the end it will hold 
+                                        ; the final result.
+mul_loop:
+        srl     b
+        rr      c                       ;; divide BC by 2 and shifting the state of bit 0 into the carry
+                                        ;; if carry = 0, then state of bit 0 was 0, (the rightmost digit was 0) 
+                                        ;; if carry = 1, then state of bit 1 was 1. (the rightmost digit was 1)
+                                        ;; if rightmost digit was 0, then the result would be 0, and we do the add.
+                                        ;; if rightmost digit was 1, then the result is DE and we do the add.
+        jr      nc,no_add
+
+        ;; will get to here if carry = 1        
+        add     hl,de
+
+no_add:
+        ;; at this point BC has already been divided by 2
+
+        ex      de,hl                   ;; swap DE and HL
+        add     hl,hl                   ;; multiply DE by 2
+        ex      de,hl                   ;; swap DE and HL
+
+        ;; at this point DE has been multiplied by 2
+    
+        dec     a
+        jr      nz,mul_loop             ;; process more bits
+        ret
+
+        ;
+        ; Clear memory
+        ;
+        ; Input:
+        ;       hl - Pointer to start of memory to clear
+        ;       b - Number of bytes to clear
+        ;
+        ; Output:
+        ;       None
+        ;
+;clearMem:
+;        push    hl
+;clearMem_2:
+;        ld      (hl), $00
+;        inc     hl
+;        djnz    clearMem_2
+;        pop     hl
+;        ret
 ENDIF
 
         DEFS    $389f - $, $FF
@@ -19771,6 +19787,83 @@ UCASE:  call    L2C8D                   ;+ ROM routine ALPHA.
 
 ENDIF
 
+IFDEF pokemon
+        ;; https://de.comp.lang.assembler.x86.narkive.com/EjY9sEbE/z80-binary-to-ascii
+        ;;--------------------------------------------------
+        ;; Binary to BCD conversion
+        ;;
+        ;; Converts a 16-bit unsigned integer into a 6-digit
+        ;; BCD number. 1181 Tcycles
+        ;;
+        ;; input: HL = unsigned integer to convert
+        ;; output: C:HL = 6-digit BCD number
+        ;; destroys: A,F,B,C,D,E,H,L
+        ;;--------------------------------------------------
+bin2BCD:
+        LD      bc, $1000               ; handle 16 bits, one bit per iteration
+        ld      d, c
+        ld      e, c
+bin2BCD_2:
+        ADD     hl, hl
+        LD      a, e
+        ADC     a, a
+        DAA
+        LD      e, a
+        LD      a, d
+        ADC     a, a
+        DAA
+        LD      d, a
+        LD      a, c
+        ADC     a, a
+        DAA
+        LD      c, a
+        DJNZ    bin2BCD_2
+        EX      de, hl
+        ret
+
+        ;
+        ; Convert a decimal ASCII string to a 16-bit integer
+        ;
+str2Int:
+        ld      de, $0000
+        ld      (PM_INT), de
+        inc     e                       ; Multiplier (1)
+
+        ; Check for empty string
+        ld      hl, (PM_STR_PTR)
+nextDigit:
+        ld      a, l
+        cp      PM_STRING & $FF
+        ret     z
+
+        dec     hl
+        ld      a, (hl)                 ; 1's, 10's, 100's, 1000's, 10,000's
+        sub     '0'                     ; Convert ASCII to binary
+
+        ld      b, 0
+        ld      c, a
+
+        ; Multiple by multiplier
+        push    hl
+        push    de
+
+        call    mul_de_bc
+
+        ld      de, (PM_INT)
+        add     hl, de
+        ld      (PM_INT), hl
+
+        pop     de
+
+        ; Multiply the multiplier by 10
+        ld      bc, 10
+        call    mul_de_bc
+        ex      de, hl                  ; Move result to de
+
+        pop     hl
+
+        jr      nextDigit
+ENDIF
         DEFS    $3bc0 - $, $FF
 ; ------------------------------
 ; THE 'SERIES GENERATOR' ROUTINE
@@ -19852,196 +19945,289 @@ L3BCA:  DEFB    $31                     ;;duplicate       v,v.
                                 ; after last number in series.
 
 IFDEF   pokemon
+        defc    PM_VARS=$5800
+        defc    SP_SAVE=PM_VARS-2
+        defc    PM_CURSOR=SP_SAVE-1
+        defc    PM_STRING=PM_CURSOR-8
+        defc    PM_STR_PTR=PM_STRING-2
+        defc    PM_INT=PM_STR_PTR-2
+        defc    PM_STACK=PM_INT
 poke:
-        ld      (CADEN-2), sp
-        ld      sp, CADEN-15-1
-        push    bc
-        push    de
-        ld      bc, 11
-        push    hl
-        push    iy
-        ld      iy, $5c3a
-        jr      pok01
-        DEFS    $3c04 - $, $FF
-        ret                     ; TEST_SCREEN entry point
-pok01:
-        ld      hl, $5c78
-        ex      af, af'
+        ld      (SP_SAVE), sp           ; Save the current stack pointer
+        ld      sp, PM_STACK            ; Use the end of screen memory for stack space
+
+        ; Save registers
         push    af
-        ld      sp, $5700
-        ld      e, (hl)
-        inc     l
-        ld      d, (hl)
-        ld      (hl), b
-        push    de
-        ld      l, $8f
-        ld      e, (hl)
-        ld      (hl), $39
-        inc     l
-        ld      d, (hl)
-        ld      (hl), b
-        push    de
-        inc     l
-        ld      a, i
-        ld      e, a
-        ld      a, $18
-        jp      po, pok02
-        ld      a, l
-pok02:
-        ld      r, a
-        ld      i, a
-        ld      d, (hl)
-        ld      (hl), b
-        push    de
-        ld      l, $3b
-        ld      e, (hl)
-        ld      (hl), 8
-        ld      l, $41
-        ld      d, (hl)
-        ld      (hl), b
-        push    de
-        ld      l, b
-        ld      de, CADEN-15
-        ldir
-        ex      de, hl
-        ld      hl, tab01+10
-        ld      c, e
-        dec     e
-        lddr
         push    bc
-        ld      hl, CADEN
-        xor     a
-pok03:
-        ld      (hl), b
-pok04:
-        inc     l
-        jr      nz, pok03
-        or      a
-        ld      l, CADEN&$ff
-        ld      (hl), l
-pok05:
-        ld      de, CADEN+1
-        jr      z, pok06
-        ld      (de), a
-        ld      (hl), 2
-pok06:
-        ld      hl, $4000
-        ld      b, 5
-pok07:
         push    de
-        ex      de, hl
-        ld      l, (hl)                 ; Char to display
+        push    hl
+
+        ; Clear the cursor variable
+        xor     a
+        ld      (PM_CURSOR), a
+
+        call    displayPrompt
+        call    resetCursor
+
+        ld      hl, PM_STRING
+        call    getNum
+
+        jr      p1
+
+        DEFS    $3c04 - $, $FF
+        DEFB    $c9                     ; TEST_SCREEN entry point
+p1:
+        call    displayPrompt
+        call    resetCursor
+
+        call    str2Int
+
+        ld      hl, (PM_INT)
+        ld      l, (hl)
+        ld      h, 0
+        call    bin2BCD
+
+        ld      (PM_INT), hl            ; Save the BCD value
+        ld      hl, PM_INT+1            ; Pointer to the BCD value
+        call    displayBCD              ; Display it.
+
+        ; TODO: Copy BCD data to string
+
+        ; TODO: Get poke data, if no new poke data, exit
+
+        ; TODO: Poke data
+
+        ; TODO: loop
+
+exit:
+        ; Restore registers
+        pop     hl
+        pop     de
+        pop     bc
+        pop     af
+
+        ; Restore stack pointer
+        ld      sp, (SP_SAVE)
+        retn
+
+        ;
+        ; Set the cursor X location
+        ;
+        ; This routine removes the cursor from its old location
+        ; and displays it at its new location.
+        ;
+        ; Input:
+        ;       a - New cursor X location
+        ;
+        ; Output:
+        ;       None
+        ;
+updateCursor:
+        ld      hl, (PM_CURSOR)         ; Get the old cursor location
+        ld      h, $58                  ; Upper 8-bits of screen attribute memory
+
+        ld      (hl), $39               ; Paper white, ink blue
+
+        ld      (PM_CURSOR), a
+        ld      l, a
+        ld      (hl), $f9               ; Paper white, ink blue, flash, bright
+
+        ret
+
+        ;
+        ; Display BCD value pointed to by hl
+        ;
+        ; Input:
+        ;       hl - Pointer to 16-bit BCD value
+        ;
+        ; Output:
+        ;       None
+        ;
+displayBCD:
+
+        ld      b, 2
+displayBCD_1:
+        rld
+        and     $0f
+        call    displayBCDDigit
+        djnz    displayBCD_1
+
+        rld
+        dec     hl
+
+        rld
+        and     $0f
+        call    displayBCDDigit
+
+        rld
+        and     $0f
+        call    displayBCDDigit_forced
+
+        rld
+        ret
+
+displayBCDDigit:
+        ret     z
+displayBCDDigit_forced:
+        add     '0'
+        call    printChar
+        ret
+
+        ;
+        ; Read a numeric value from the keyboard and display it
+        ;
+        ; Input:
+        ;       hl - Pointer to memory to save number
+        ;
+        ; Output:
+        ;       None
+        ;
+getNum:
+        ld      b, 5
+        ld      (PM_STR_PTR), hl
+getNum_2:
+        push    bc
+        call    getkey
+        pop     bc
+        cp      $0d                     ; Check for <enter>
+        jr      z, getNumDone           ; Return if it is pressed
+        cp      $08
+        jr      z, backspace
+        cp      '0'
+        jr      c, getNum_2
+        cp      '9' + 1
+        jr      nc, getNum_2
+
+        ld      c, a                    ; Save key
+        ld      a, b                    ; Get remaining count
+        or      a
+        jr      z, getNum_2             ; If count is zero read keys again
+
+        dec     b                       ; Decrement count
+        ld      a, c                    ; Restore key
+
+        ; Save character read
+        ld      hl, (PM_STR_PTR)
+        ld      (hl), a
+        inc     hl
+        ld      (PM_STR_PTR), hl
+
+        ; Display the character read from the keyboard
+        call    printChar
+
+        jr      getNum_2
+backspace:
+        ld      a, (PM_CURSOR)
+        and     a
+        jr      z, getNum_2        
+
+        inc     b                       ; Increase remaining char count
+
+        dec     a                       ; Move cursor left
+        call    updateCursor
+
+        ld      hl, (PM_STR_PTR)
+        dec     hl
+        ld      (PM_STR_PTR), hl
+
+        ld      a, '-'
+        call    printChar
+
+        ld      a, (PM_CURSOR)
+        dec     a
+        call    updateCursor
+
+        jr      getNum_2
+        
+getNumDone:
+        ; Null terminate the string
+        ld      hl, (PM_STR_PTR)
+        ld      (hl), 0
+
+        ret
+
+        ;
+        ; Read a key from the keyboard
+        ;
+        ; Input:
+        ;       None
+        ;
+        ; Output:
+        ;       a - ASCII code of key pressed
+        ;
+getkey:
+        ; Wait for key release
+        call    L028E
+        ld      a, e
+        cp      $27                     ; If shift is pressed
+        jr      z, getkey_2             ; continue to read key
+        inc     a
+        jr      nz, getkey
+
+        ; Wait for key press
+getkey_2:
+        call    L028E                   ; Scan the keyboard
+        call    L031E                   ; Convert to ASCII code
+        jr      nc, getkey_2
+
+        ; b - Shift key
+        ; a - ASCII key code
+        ld      d, b
+        ld      e, a
+        ld      hl, $2730               ; Shift + '0' = backspace
+        or      a                       ; Clear carry flag
+        sbc     hl, de
+        ret     nz                      ; Return if not backspace
+
+        ld      a, $08                  ; Change ASCII code to $08 (backspace)
+        ret
+
+        ;
+        ; Display a character at the specified position.
+        ;
+        ; Input:
+        ;		a - Character to display
+        ; Output:
+        ;       None
+        ;
+printChar:
+        push    af
+        push    bc
+        push    hl
+
+        sub     ' '                     ; Font data starts at <SPACE>
+        ld      l, a                    ; Get char to display
+        ld      h, 0
+
         add     hl, hl                  ; x 2
         add     hl, hl                  ; x 4
         add     hl, hl                  ; x 8
-        ld      h, L3D00>>8             ; Upper 8-bits of the font address
-        ex      de, hl
-        call    L0B99
-        pop     de
-        inc     de
-        djnz    pok07
-        ld      hl, $5c3b
-        ei
-pok08:
-        bit     5, (hl)
-        jr      z, pok08
-        di
-        res     5, (hl)
-        ld      a, ($5c08)
-        or      $20
-        ld      hl, CADEN
-        ld      c, (hl)
-        cp      $2d
-        jr      z, pok14
-        jr      nc, pok09
-        dec     (hl)
-        jr      z, pok09
-        xor     a
-        dec     c
-        dec     (hl)
-pok09:
-        inc     (hl)
-        jp      m, pok03
-        add     hl, bc
-        ld      (hl), a
-        xor     a
-        jr      pok05
-pok10:
-        inc     l
-pok11:
-        add     a, -10
-pok12:
-        inc     (hl)
-        jr      c, pok11
-        inc     l
-pok13:
-        add     a, 10+$30
-        ld      (hl), a
-        xor     a
-        jr      pok04
-pok14:
-        dec     c
-        jp      m, pok18
-        ld      b, c
-        ex      de, hl
-        ld      h, l
-pok15:
-        inc     e
-        ld      a, (de)
-        and     $0f
-        push    bc
-        add     hl, hl
-        ld      b, h
-        ld      c, l
-        add     hl, hl
-        add     hl, hl
-        add     hl, bc
-        add     a, l
-        ld      l, a
-        jr      nc, pok16
-        inc     h
-pok16:
-        pop     bc
-        djnz    pok15
-        bit     2, c
-        pop     de
-        jr      nz, pok17
-        ex      de, hl
-        ld      (hl), a
-        inc     hl
-pok17:
-        push    hl
-        ld      a, (hl)
-        ld      hl, CADEN+2
-        ld      (hl), $2f
-        dec     l
-        ld      (hl), $32
-        sub     200
-        jr      nc, pok10
-        dec     (hl)
-        sub     -100
-        jr      nc, pok10
-        dec     (hl)
-        defb    $11
-        jp      $0038
-        dec     (hl)
-        add     a, 90
-        jr      nc, pok13
-        jr      pok12
-pok18:
-        ld      c, 11
+
+        ld      de, L3D00               ; Font data address
+        add     hl, de                  ; HL points to character
+
+        ; Generate screen address
+        ld      de, (PM_CURSOR)         ; Get cursor position into e
+        ld      d, $40                  ; Upper 8-bits of video bitmap
+
+        ; Display the character
+        ld      b, 8
+nextByte:
+        ld      a, (hl)                 ; Get font data
+        ld      (de), a                 ; Store to screen
+        inc     hl                      ; Next byte of font data
+        inc     d                       ; Next pixel row
+        djnz    nextByte
+
+        ; Update the cursor position
+        ld      a, e
+        inc     a
+        call    updateCursor
+
         pop     hl
-        ld      hl, CADEN-15
-        ld      de, $5c00
-        ldir
-        ld      hl, $5805
-        ld      a, (hl)
-        rra
-        rra
-        rra
-        xor     (hl)
-        jp      pok19
-        DEFB    "AV"                    ; 2 bytes
+        pop     bc
+        pop     af
+        ret
 ELSE
         DEFS    $3c04 - $, $FF
 ; -----------------------
