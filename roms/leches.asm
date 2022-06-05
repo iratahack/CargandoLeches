@@ -2,7 +2,6 @@
         DEFINE  copymsg
 ;        DEFINE  resetplay
         DEFINE  pokemon
-        defc    CADEN=$5800-6
 
 ;        OUTPUT  leches.rom
 
@@ -18760,58 +18759,6 @@ ULTR9:  XOR     (HL)
         RET
 
 IFDEF   pokemon
-mul_de_bc:
-;; http://cpctech.cpc-live.com/docs/mult.html
-;; multiply DE and BC
-;; DE is equivalent to the number in the top row in our algorithm
-;; and BC is equivalent to the number in the bottom row in our algorithm
-
-        ld      a,16                    ; this is the number of bits of the number to process
-        ld      hl,0                    ; HL is updated with the partial result, and at the end it will hold 
-                                        ; the final result.
-mul_loop:
-        srl     b
-        rr      c                       ;; divide BC by 2 and shifting the state of bit 0 into the carry
-                                        ;; if carry = 0, then state of bit 0 was 0, (the rightmost digit was 0) 
-                                        ;; if carry = 1, then state of bit 1 was 1. (the rightmost digit was 1)
-                                        ;; if rightmost digit was 0, then the result would be 0, and we do the add.
-                                        ;; if rightmost digit was 1, then the result is DE and we do the add.
-        jr      nc,no_add
-
-        ;; will get to here if carry = 1        
-        add     hl,de
-
-no_add:
-        ;; at this point BC has already been divided by 2
-
-        ex      de,hl                   ;; swap DE and HL
-        add     hl,hl                   ;; multiply DE by 2
-        ex      de,hl                   ;; swap DE and HL
-
-        ;; at this point DE has been multiplied by 2
-    
-        dec     a
-        jr      nz,mul_loop             ;; process more bits
-        ret
-
-        ;
-        ; Clear memory
-        ;
-        ; Input:
-        ;       hl - Pointer to start of memory to clear
-        ;       b - Number of bytes to clear
-        ;
-        ; Output:
-        ;       None
-        ;
-;clearMem:
-;        push    hl
-;clearMem_2:
-;        ld      (hl), $00
-;        inc     hl
-;        djnz    clearMem_2
-;        pop     hl
-;        ret
 ENDIF
 
         DEFS    $389f - $, $FF
@@ -19840,25 +19787,23 @@ nextDigit:
         ld      a, (hl)                 ; 1's, 10's, 100's, 1000's, 10,000's
         sub     '0'                     ; Convert ASCII to binary
 
-        ld      b, 0
-        ld      c, a
+        push    hl
+
+        ld      h, 0
+        ld      l, a
 
         ; Multiple by multiplier
-        push    hl
-        push    de
+        call    L30A9                   ; HL=HL*DE (ROM)
 
-        call    mul_de_bc
-
-        ld      de, (PM_INT)
-        add     hl, de
+        ld      bc, (PM_INT)
+        add     hl, bc
         ld      (PM_INT), hl
 
-        pop     de
-
         ; Multiply the multiplier by 10
-        ld      bc, 10
-        call    mul_de_bc
-        ex      de, hl                  ; Move result to de
+        ld      hl, $000a
+        call    L30A9                   ; HL=HL*DE (ROM)
+
+        ex      de, hl
 
         pop     hl
 
@@ -19966,39 +19911,50 @@ poke:
         xor     a
         ld      (PM_CURSOR), a
 
+getAddressInput:
         call    displayPrompt
         call    resetCursor
 
         ld      hl, PM_STRING
         call    getNum
 
+        ld      hl, PM_STRING
         jr      p1
 
         DEFS    $3c04 - $, $FF
         DEFB    $c9                     ; TEST_SCREEN entry point
 p1:
+        ; If the first byte of the string is null
+        ; it is empty, exit.
+        ld      a, (HL)
+        or      a
+        jr      z, exit
+
         call    displayPrompt
         call    resetCursor
 
         call    str2Int
 
+        ; Peek the data at the specified address
         ld      hl, (PM_INT)
         ld      l, (hl)
         ld      h, 0
+        ; Convert it to BCD
         call    bin2BCD
-
+        ; Display the peek'd data
         ld      (PM_INT), hl            ; Save the BCD value
         ld      hl, PM_INT+1            ; Pointer to the BCD value
         call    displayBCD              ; Display it.
 
         ; TODO: Copy BCD data to string
 
-        ; TODO: Get poke data, if no new poke data, exit
+        ; TODO: Get poke data
+        ld      hl, PM_STRING
+        call    getNum
 
         ; TODO: Poke data
 
-        ; TODO: loop
-
+        jr      getAddressInput
 exit:
         ; Restore registers
         pop     hl
@@ -20044,31 +20000,28 @@ updateCursor:
         ;       None
         ;
 displayBCD:
+        call    displayNextBCDDigit
+        call    displayNextBCDDigit
 
-        ld      b, 2
-displayBCD_1:
+        rld
+        dec     hl                      ; Low order byte
+
+        call    displayNextBCDDigit
+
+        ; The last BCD digit is always displayed, even if it is zero
         rld
         and     $0f
         call    displayBCDDigit
-        djnz    displayBCD_1
-
-        rld
-        dec     hl
-
-        rld
-        and     $0f
-        call    displayBCDDigit
-
-        rld
-        and     $0f
-        call    displayBCDDigit_forced
 
         rld
         ret
 
-displayBCDDigit:
+displayNextBCDDigit:
+        rld
+        and     $0f
+        ; Do not display zero's
         ret     z
-displayBCDDigit_forced:
+displayBCDDigit:
         add     '0'
         call    printChar
         ret
@@ -20077,17 +20030,18 @@ displayBCDDigit_forced:
         ; Read a numeric value from the keyboard and display it
         ;
         ; Input:
-        ;       hl - Pointer to memory to save number
+        ;       hl - Pointer to memory to save the string
         ;
         ; Output:
-        ;       None
+        ;       hl - Points to the strings null terminator
         ;
 getNum:
         ld      b, 5
-        ld      (PM_STR_PTR), hl
 getNum_2:
         push    bc
+        push    hl
         call    getkey
+        pop     hl
         pop     bc
         cp      $0d                     ; Check for <enter>
         jr      z, getNumDone           ; Return if it is pressed
@@ -20107,10 +20061,8 @@ getNum_2:
         ld      a, c                    ; Restore key
 
         ; Save character read
-        ld      hl, (PM_STR_PTR)
         ld      (hl), a
         inc     hl
-        ld      (PM_STR_PTR), hl
 
         ; Display the character read from the keyboard
         call    printChar
@@ -20141,8 +20093,8 @@ backspace:
         
 getNumDone:
         ; Null terminate the string
-        ld      hl, (PM_STR_PTR)
         ld      (hl), 0
+        ld      (PM_STR_PTR), hl
 
         ret
 
