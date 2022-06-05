@@ -16983,19 +16983,46 @@ L33BF:  IN      L, (C)
 
 
 IFDEF   pokemon
-displayPrompt:
-        call    resetCursor
-        ld      b, 5
-clearEntry_2:
-        ld      a, '-'
+        ;
+        ; Print a string terminated with bit-7 set
+        ;
+        ; Input:
+        ;       hl - Pointer to string to print
+        ;
+print:
+        ld      a, (hl)
+        or      a
+        ret     z
+        inc     hl
         call    printChar
-        djnz    clearEntry_2
+        jr      print
+
+        ;
+        ; Set the cursor X location
+        ;
+        ; This routine removes the cursor from its old location
+        ; and displays it at its new location.
+        ;
+        ; Input:
+        ;       a - New cursor X location
+        ;
+        ; Output:
+        ;       None
+        ;
+updateCursor:
+        ld      hl, (PM_CURSOR)         ; Get the old cursor location
+        ld      h, $58                  ; Upper 8-bits of screen attribute memory
+
+        ld      (hl), $39               ; Paper white, ink blue
+
+        ld      (PM_CURSOR), a
+        ld      l, a
+        ld      (hl), $f9               ; Paper white, ink blue, flash, bright
+
         ret
 
-resetCursor:
-        xor     a
-        call    updateCursor
-        ret
+prompt:
+        DEFB    "-----", '\r', $00
 ENDIF
 
         DEFS    $33e0 - $, $FF
@@ -19735,6 +19762,70 @@ UCASE:  call    L2C8D                   ;+ ROM routine ALPHA.
 ENDIF
 
 IFDEF pokemon
+        ;
+        ; Convert a 16-bit integer to a decimal ASCII string
+        ;
+        ; Input:
+        ;       hl - 16-bit value to convert
+        ;       de - Pointer to location to recieve string
+        ;
+        ; Output:
+        ;       c:hl - 5 digit BCD value
+        ;       de - Pointer to the end of the string
+        ;
+int2Str:
+        ex      af, af'                 ; Use the alternate CF to skip leading zero's
+        or      a                       ; Clear the carry flag
+        ex      af, af'
+
+        push    de                      ; Save the string pointer
+        call    bin2BCD                 ; Convert the integer to BCD
+        pop     de                      ; Restore string pointer
+
+        push    hl                      ; Save the 4 BCD digits on the stack
+        ld      hl, $0001               ; Point hl to the high order 8-bits saved
+        add     hl, sp                  ; on the stack
+
+        ld      a, c                    ; Get the first digit
+        call    saveDigit               ; Add the digit to the string
+
+        rld                             ; Get the second digit
+        call    saveDigit               ; Add the digit to the string
+        rld                             ; Get the third digit
+        call    saveDigit               ; Add the digit to the string
+
+        rld                             ; Ensure the contents on the stack are the same as when we started
+        dec     hl
+
+        rld                             ; Get the forth digit
+        call    saveDigit               ; Add the digit to the string
+        rld                             ; Get the fifth digit
+        call    saveDigit               ; Add the digit to the string
+
+        rld                             ; Ensure the contents on the stack are the same as when we started
+        pop     hl                      ; Get the BCD digits back
+
+        xor     a                       ; Null terminate string
+        ld      (de), a
+
+        ret
+
+saveDigit:
+        and     $0f                     ; Only use lower nibble
+        ex      af, af'                 ; Get alternate flags
+        jr      c, forceDigit           ; If set, the digit must be displayed
+        ex      af, af'                 ; Save alternate flags
+        ret     z                       ; Skip leading zeros
+
+        ex      af, af'                 ; Get alternate flags
+        scf                             ; Set the carry flag
+forceDigit:
+        ex      af, af'                 ; Save alternate flags
+        add     '0'                     ; Convert to ASCII
+        ld      (de), a                 ; Save to the string pointer
+        inc     de                      ; Increment the string pointer
+        ret
+
         ;; https://de.comp.lang.assembler.x86.narkive.com/EjY9sEbE/z80-binary-to-ascii
         ;;--------------------------------------------------
         ;; Binary to BCD conversion
@@ -19771,14 +19862,19 @@ bin2BCD_2:
         ;
         ; Convert a decimal ASCII string to a 16-bit integer
         ;
+        ; Input:
+        ;       hl - Pointer to the string terminator
+        ;
+        ; Output:
+        ;
+        ;
 str2Int:
         ld      de, $0000
         ld      (PM_INT), de
         inc     e                       ; Multiplier (1)
 
-        ; Check for empty string
-        ld      hl, (PM_STR_PTR)
 nextDigit:
+        ; Check for empty string
         ld      a, l
         cp      PM_STRING & $FF
         ret     z
@@ -19903,6 +19999,8 @@ poke:
 
         ; Save registers
         push    af
+        ex      af, af'
+        push    af
         push    bc
         push    de
         push    hl
@@ -19912,13 +20010,15 @@ poke:
         ld      (PM_CURSOR), a
 
 getAddressInput:
-        call    displayPrompt
-        call    resetCursor
+        ; Prompt the user for input
+        ld      hl, prompt
+        call    print
 
-        ld      hl, PM_STRING
+        ; Read a number string from the keyboard
+        ld      hl, PM_STRING           ; Pointer to memory to receive the string
+        push    hl
         call    getNum
-
-        ld      hl, PM_STRING
+        pop     hl
         jr      p1
 
         DEFS    $3c04 - $, $FF
@@ -19930,25 +20030,28 @@ p1:
         or      a
         jr      z, exit
 
-        call    displayPrompt
-        call    resetCursor
-
+        ; Convert the string to an int
+        ld      hl, (PM_STR_PTR)        ; Pointer to the string terminator
         call    str2Int
 
         ; Peek the data at the specified address
         ld      hl, (PM_INT)
         ld      l, (hl)
         ld      h, 0
-        ; Convert it to BCD
-        call    bin2BCD
+
+        ld      de, PM_STRING
+        call    int2Str
+
+        ; Re-display the prompt
+        ld      hl, prompt
+        call    print
+
         ; Display the peek'd data
-        ld      (PM_INT), hl            ; Save the BCD value
-        ld      hl, PM_INT+1            ; Pointer to the BCD value
-        call    displayBCD              ; Display it.
+        ld      hl, PM_STRING
+        call    print
 
-        ; TODO: Copy BCD data to string
-
-        ; TODO: Get poke data
+        ; Get poke data
+        ; TODO: Start at the end of the current peeked data
         ld      hl, PM_STRING
         call    getNum
 
@@ -19961,70 +20064,12 @@ exit:
         pop     de
         pop     bc
         pop     af
+        ex      af, af'
+        pop     af
 
         ; Restore stack pointer
         ld      sp, (SP_SAVE)
         retn
-
-        ;
-        ; Set the cursor X location
-        ;
-        ; This routine removes the cursor from its old location
-        ; and displays it at its new location.
-        ;
-        ; Input:
-        ;       a - New cursor X location
-        ;
-        ; Output:
-        ;       None
-        ;
-updateCursor:
-        ld      hl, (PM_CURSOR)         ; Get the old cursor location
-        ld      h, $58                  ; Upper 8-bits of screen attribute memory
-
-        ld      (hl), $39               ; Paper white, ink blue
-
-        ld      (PM_CURSOR), a
-        ld      l, a
-        ld      (hl), $f9               ; Paper white, ink blue, flash, bright
-
-        ret
-
-        ;
-        ; Display BCD value pointed to by hl
-        ;
-        ; Input:
-        ;       hl - Pointer to 16-bit BCD value
-        ;
-        ; Output:
-        ;       None
-        ;
-displayBCD:
-        call    displayNextBCDDigit
-        call    displayNextBCDDigit
-
-        rld
-        dec     hl                      ; Low order byte
-
-        call    displayNextBCDDigit
-
-        ; The last BCD digit is always displayed, even if it is zero
-        rld
-        and     $0f
-        call    displayBCDDigit
-
-        rld
-        ret
-
-displayNextBCDDigit:
-        rld
-        and     $0f
-        ; Do not display zero's
-        ret     z
-displayBCDDigit:
-        add     '0'
-        call    printChar
-        ret
 
         ;
         ; Read a numeric value from the keyboard and display it
@@ -20096,6 +20141,8 @@ getNumDone:
         ld      (hl), 0
         ld      (PM_STR_PTR), hl
 
+        ld      a, '\r'
+        call    printChar
         ret
 
         ;
@@ -20147,6 +20194,14 @@ printChar:
         push    bc
         push    hl
 
+        cp      '\r'
+        jr      nz, printChar_1
+
+        xor     a
+        call    updateCursor
+        jr      printCharDone
+
+printChar_1:
         sub     ' '                     ; Font data starts at <SPACE>
         ld      l, a                    ; Get char to display
         ld      h, 0
@@ -20176,6 +20231,7 @@ nextByte:
         inc     a
         call    updateCursor
 
+printCharDone:
         pop     hl
         pop     bc
         pop     af
