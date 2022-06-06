@@ -1,4 +1,4 @@
-EXES=CgLeches CgTorpes leches torpes
+EXES=CgLeches leches
 ROMS=leches.rom Spectrum128_ROM0.rom
 
 
@@ -8,7 +8,7 @@ clean:
 	rm -rf $(EXES) $(ROMS) roms/*.o *.map
 
 %:src/%.c
-	gcc -m32 -O2 $< -o $@
+	gcc -O2 $< -o $@
 
 %.rom: roms/%.asm
 	z88dk-z80asm -mz80 -m -b -o$@ $<
