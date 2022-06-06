@@ -1,5 +1,5 @@
 EXES=CgLeches CgTorpes leches torpes
-ROMS=leches.rom antleches.rom sin_leches.rom Spectrum128_ROM0.rom
+ROMS=leches.rom Spectrum128_ROM0.rom
 
 
 all: $(EXES) $(ROMS)
