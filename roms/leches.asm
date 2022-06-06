@@ -19850,18 +19850,16 @@ bin2BCD_2:
         ;
         ; Convert a decimal ASCII string to a 16-bit integer
         ;
-        ; The result of the conversion is saved in PM_INT
-        ;
         ; Input:
         ;       hl - Pointer to the string terminator
         ;
         ; Output:
+        ;       bc - 16-bit integer
         ;
 str2Int:
-        ld      de, $0000
-        ld      (PM_INT), de
-        inc     e                       ; Multiplier (1)
-
+        ld      de, $0001               ; Multiplier
+        ld      b, d
+        ld      c, d
 nextDigit:
         ; Check for empty string
         ld      a, l
@@ -19880,9 +19878,8 @@ nextDigit:
         ; Multiple by multiplier
         call    L30A9                   ; HL=HL*DE (ROM)
 
-        ld      bc, (PM_INT)
         add     hl, bc
-        ld      (PM_INT), hl
+        ld      bc, hl
 
         ; Multiply the multiplier by 10
         ld      hl, $000a
@@ -19979,9 +19976,7 @@ IFDEF   pokemon
         defc    SP_SAVE=PM_VARS-2
         defc    PM_CURSOR=SP_SAVE-1
         defc    PM_STRING=PM_CURSOR-8
-        defc    PM_STR_PTR=PM_STRING-2
-        defc    PM_INT=PM_STR_PTR-2
-        defc    PM_STACK=PM_INT
+        defc    PM_STACK=PM_STRING
 poke:
         ld      (SP_SAVE), sp           ; Save the current stack pointer
         ld      sp, PM_STACK            ; Use the end of screen memory for stack space
@@ -20005,27 +20000,23 @@ getAddressInput:
 
         ; Read a number string from the keyboard
         ld      hl, PM_STRING           ; Pointer to memory to receive the string
-        push    hl
-        ld      b, 5
+        ld      b, 5                    ; Max string length
         call    getNum
-        pop     hl
         jr      p1
 
         DEFS    $3c04 - $, $FF
         DEFB    $c9                     ; TEST_SCREEN entry point
 p1:
-        ; If the first byte of the string is null
-        ; it is empty, exit.
-        ld      a, (HL)
-        or      a
+        ; If string length is 0, exit
+        ld      a, PM_STRING & $FF
+        cp      l
         jr      z, exit
 
         ; Convert the string to an int
-        ld      hl, (PM_STR_PTR)        ; Pointer to the end of the string
         call    str2Int
 
         ; Peek the data at the specified address
-        ld      hl, (PM_INT)
+        ld      hl, bc
         push    hl
         ld      l, (hl)
         ld      h, 0
@@ -20041,15 +20032,17 @@ p1:
         ld      hl, PM_STRING
         call    print
 
+        ld      a, +(PM_STRING + 3) & $FF
+        sub     l
+        ld      b, a                    ; Remaining bytes to read (max 3)
         ; Get poke data
-        ld      b, 3
         call    getNum
 
         ; Convert the string to an int
         call    str2Int
 
         pop     hl
-        ld      a, (PM_INT)
+        ld      a, c
         ld      (hl), a
 
         jr      getAddressInput
@@ -20067,13 +20060,13 @@ exit:
         retn
 
         ;
-        ; Print a string terminated with bit-7 set
+        ; Print a string terminated with null
         ;
         ; Input:
         ;       hl - Pointer to string to print
         ;
         ; Output:
-        ;       hl - Pointer string null terminator
+        ;       hl - Pointer to null following string
         ;
 print:
         ld      a, (hl)
@@ -20147,7 +20140,6 @@ backspace:
 getNumDone:
         ; Null terminate the string
         ld      (hl), 0
-        ld      (PM_STR_PTR), hl
 
         ld      a, '\r'
         call    printChar
