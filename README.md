@@ -4,11 +4,15 @@ Turbo loader for the ZX Spectrum. This repository was forked from [Antonio Ville
 
 The turbo loader is in two parts, native command line tools used to create the turbo tape images and updated ZX Spectrum ROM images containing the turbo loader. The ROM images include the turbo loader in addition to the standard loader allowing both regular and turbo images to be loaded.
 
+## Compatibility
+
+Older games which use a block of 256 $FF's in the Spectrum ROM for their interrupt vector table may not work with this ROM image as this area of the ROM is used by the turbo loader and *pokemon* code.
+
 ## Building
 
-To build the command line tools for converting .tap files to turbo loading .wav or .tzx files and to build the updated ROM images which include the turbo loader type `make`.
+To build the command line tools for converting .tap files to turbo loading .wav or .tzx files and to build the ROM images which include the turbo loader and *pokemon* type `make`.
 
-Z88DK must be installed and included in the path to build the ROM images. GCC is used to build the native tools and must also be included in the path.
+Z88DK must be installed and included in the path to build the ROM images. To install Z88DK, follow the instructions [here](https://github.com/z88dk/z88dk#installation). GCC is used to build the native tools and must also be included in the path.
 
 ## ROM Images
 
@@ -28,4 +32,4 @@ Type `./CgLeches` to see the built-in help.
 
 *pokemon* is a ROM based memory peek/poke utility. This version of *pokemon* has been refactored to remove dependencies on system variables and enabling of interrupts within the *pokemon* code.
 
-*pokemon* is activated by pressing the NMI button. Once activated, *pokemon* will display 5 dashes (-) in the upper-right corner of the screen (screen 0 on 128K systems). To read (peek) memory, enter a decimal address followed by *&lt;enter&gt;*. The contents of the memory location will be displayed. To change (poke) the memory contents overwrite the value shown and press *&lt;enter&gt;*. Another address may now be entered. If *&lt;enter&gt;* is pressed without entering an address, *pokemon* will exit.
+*pokemon* is activated by pressing the NMI button. Once activated, *pokemon* will display 5 dashes (-) in the upper-right corner of the screen (screen 0 on 128K systems). To read (peek) memory, enter a decimal address followed by *&lt;enter&gt;*. The contents of the memory location will be displayed. To change (poke) the memory contents, overwrite the value shown and press *&lt;enter&gt;*. Another address may now be entered. If *&lt;enter&gt;* is pressed without entering an address, *pokemon* will exit.
