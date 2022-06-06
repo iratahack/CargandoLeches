@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -81,21 +82,21 @@ int main(int argc, char *argv[])
         exit(-1);
   if (!strcasecmp((char *)strchr(argv[2], '.'), ".tzx"))
     fprintf(fo, "ZXTape!"),
-        *(int *)mem = 0xa011a,
-              fwrite(mem, ++tzx, 3, fo);
+        *(uint32_t *)mem = 0xa011a,
+                   fwrite(mem, ++tzx, 3, fo);
   else if (!strcasecmp((char *)strchr(argv[2], '.'), ".wav"))
   {
     memset(mem, wav++, 44);
-    *(int *)mem = 0x46464952;
-    *(int *)(mem + 8) = 0x45564157;
-    *(int *)(mem + 12) = 0x20746d66;
-    *(char *)(mem + 16) = 0x10;
-    *(char *)(mem + 20) = 0x01;
-    *(char *)(mem + 22) = *(char *)(mem + 32) = channel_type & 3;
-    *(short *)(mem + 24) = frequency;
-    *(int *)(mem + 28) = frequency * (channel_type & 3);
-    *(char *)(mem + 34) = 8;
-    *(int *)(mem + 36) = 0x61746164;
+    *(uint32_t *)mem = 0x46464952;
+    *(uint32_t *)(mem + 8) = 0x45564157;
+    *(uint32_t *)(mem + 12) = 0x20746d66;
+    *(uint8_t *)(mem + 16) = 0x10;
+    *(uint8_t *)(mem + 20) = 0x01;
+    *(uint8_t *)(mem + 22) = *(char *)(mem + 32) = channel_type & 3;
+    *(uint16_t *)(mem + 24) = frequency;
+    *(uint32_t *)(mem + 28) = frequency * (channel_type & 3);
+    *(uint8_t *)(mem + 34) = 8;
+    *(uint32_t *)(mem + 36) = 0x61746164;
     fwrite(mem, 1, 44, fo);
   }
   else
@@ -110,22 +111,24 @@ int main(int argc, char *argv[])
     fwrite(in + 1, 1, length - 2, ft);
     fclose(ft);
 #ifdef __linux__
-    sprintf(command, "%s/leches %d %s tmp.%s %02x %d %d 100 %d _tmp.tap >> /dev/null\n", path, frequency,
+    sprintf(command, "%s/leches %d %s tmp.%s %02x %d %d 100 %d _tmp.tap >> /dev/null", path, frequency,
             channel_type - 1 ? (channel_type - 2 ? "stereoinv" : "stereo") : "mono",
             ext, in[0], velo, offset, in[0] ? 2000 : 200);
 
     if (system(command))
     {
-      printf("\nError: leches not found \n");
+      perror("Error");
       exit(-1);
     }
 #else
-    sprintf(command, "leches %d %s tmp.%s %02x %d %d 100 %d _tmp.tap > nul\n", frequency,
+    sprintf(command, "%s\\leches.exe %d %s tmp.%s %02x %d %d 100 %d _tmp.tap > nul", path, frequency,
             channel_type - 1 ? (channel_type - 2 ? "stereoinv" : "stereo") : "mono",
             ext, in[0], velo, offset, in[0] ? 2000 : 200);
     if (system(command))
-      printf("\nError: leches.exe not found \n"),
-          exit(-1);
+    {
+      perror("Error");
+      exit(-1);
+    }
 #endif
     else
     {
@@ -158,12 +161,15 @@ int main(int argc, char *argv[])
   if (remove(command) || remove("_tmp.tap"))
     printf("\nError: deleting \n"),
         exit(-1);
+  remove("nul");
   if (wav)
-    i = ftell(fo) - 8,
-    fseek(fo, 4, SEEK_SET),
-    fwrite(&i, 4, 1, fo),
-    i -= 36,
-    fseek(fo, 40, SEEK_SET),
-    fwrite(&i, 4, 1, fo);
+  {
+    uint32_t len = ftell(fo) - 8;
+    fseek(fo, 4, SEEK_SET);
+    fwrite(&len, sizeof(len), 1, fo);
+    len -= 36;
+    fseek(fo, 40, SEEK_SET);
+    fwrite(&len, sizeof(len), 1, fo);
+  }
   fclose(fo);
 }
