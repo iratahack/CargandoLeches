@@ -12,7 +12,7 @@ Z88DK must be installed and included in the path to build the ROM images. GCC is
 
 ## ROM Images
 
-Pre-build ROM images can be found in the [*binaries*](binaries) folder. For 48K systems use the [leches.rom](binaries/leches.rom) image. For 128K systems use either [Spectrum128_ROM0.rom](binaries/Spectrum128_ROM0.rom) or [Spectrum128_ROM0_BugFixed.rom](binaries/Spectrum128_ROM0_BugFixed.rom) for ROM-0 and [leches.rom](binaries/leches.rom) for ROM-1.
+Pre-built ROM images can be found in the [*binaries*](binaries) folder. For 48K systems use the [leches.rom](binaries/leches.rom) image. For 128K systems use either [Spectrum128_ROM0.rom](binaries/Spectrum128_ROM0.rom) or [Spectrum128_ROM0_BugFixed.rom](binaries/Spectrum128_ROM0_BugFixed.rom) for ROM-0 and [leches.rom](binaries/leches.rom) for ROM-1.
 
 ## Usage
 
@@ -22,4 +22,10 @@ When using emulators like [FUSE](http://fuse-emulator.sourceforge.net/) the fast
 ./CgLeches <input.tap> <output.wav> 6
 ```
 
-Type `./CgLeches` to see the build-in help.
+Type `./CgLeches` to see the built-in help.
+
+## pokemon
+
+*pokemon* is a ROM based memory peek/poke utility. This version of *pokemon* has been refactored to remove dependencies on system variables and enabling of interrupts within the *pokemon* code.
+
+*pokemon* is activated by pressing the NMI button. Once activated, *pokemon* will display 5 dashes (-) in the upper-right corner of the screen (screen 0 on 128K systems). To read (peek) memory, enter a decimal address followed by *&lt;enter&gt;*. The contents of the memory location will be displayed. To change (poke) the memory contents overwrite the value shown and press *&lt;enter&gt;*. Another address may now be entered. If *&lt;enter&gt;* is pressed without entering an address, *pokemon* will exit.
