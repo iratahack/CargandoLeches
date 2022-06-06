@@ -16984,20 +16984,6 @@ L33BF:  IN      L, (C)
 
 IFDEF   pokemon
         ;
-        ; Print a string terminated with bit-7 set
-        ;
-        ; Input:
-        ;       hl - Pointer to string to print
-        ;
-print:
-        ld      a, (hl)
-        or      a
-        ret     z
-        inc     hl
-        call    printChar
-        jr      print
-
-        ;
         ; Set the cursor X location
         ;
         ; This routine removes the cursor from its old location
@@ -17010,6 +16996,7 @@ print:
         ;       None
         ;
 updateCursor:
+        push    hl
         ld      hl, (PM_CURSOR)         ; Get the old cursor location
         ld      h, $58                  ; Upper 8-bits of screen attribute memory
 
@@ -17018,7 +17005,7 @@ updateCursor:
         ld      (PM_CURSOR), a
         ld      l, a
         ld      (hl), $f9               ; Paper white, ink blue, flash, bright
-
+        pop     hl
         ret
 
 prompt:
@@ -18785,9 +18772,6 @@ ULTR9:  XOR     (HL)
         SCF
         RET
 
-IFDEF   pokemon
-ENDIF
-
         DEFS    $389f - $, $FF
 
 ; ------------------------
@@ -19800,6 +19784,10 @@ int2Str:
         rld                             ; Get the forth digit
         call    saveDigit               ; Add the digit to the string
         rld                             ; Get the fifth digit
+        ; Always display the last digit
+        ex      af, af'                 ; Get alternate flags
+        scf                             ; Set the carry flag
+        ex      af, af'                 ; Save alternate flags
         call    saveDigit               ; Add the digit to the string
 
         rld                             ; Ensure the contents on the stack are the same as when we started
@@ -19862,11 +19850,12 @@ bin2BCD_2:
         ;
         ; Convert a decimal ASCII string to a 16-bit integer
         ;
+        ; The result of the conversion is saved in PM_INT
+        ;
         ; Input:
         ;       hl - Pointer to the string terminator
         ;
         ; Output:
-        ;
         ;
 str2Int:
         ld      de, $0000
@@ -19881,7 +19870,7 @@ nextDigit:
 
         dec     hl
         ld      a, (hl)                 ; 1's, 10's, 100's, 1000's, 10,000's
-        sub     '0'                     ; Convert ASCII to binary
+        sub     '0'                     ; Convert to binary
 
         push    hl
 
@@ -20017,6 +20006,7 @@ getAddressInput:
         ; Read a number string from the keyboard
         ld      hl, PM_STRING           ; Pointer to memory to receive the string
         push    hl
+        ld      b, 5
         call    getNum
         pop     hl
         jr      p1
@@ -20031,18 +20021,19 @@ p1:
         jr      z, exit
 
         ; Convert the string to an int
-        ld      hl, (PM_STR_PTR)        ; Pointer to the string terminator
+        ld      hl, (PM_STR_PTR)        ; Pointer to the end of the string
         call    str2Int
 
         ; Peek the data at the specified address
         ld      hl, (PM_INT)
+        push    hl
         ld      l, (hl)
         ld      h, 0
-
+        ; Convert the peeked data to a string
         ld      de, PM_STRING
         call    int2Str
 
-        ; Re-display the prompt
+        ; Display the prompt
         ld      hl, prompt
         call    print
 
@@ -20051,11 +20042,15 @@ p1:
         call    print
 
         ; Get poke data
-        ; TODO: Start at the end of the current peeked data
-        ld      hl, PM_STRING
+        ld      b, 3
         call    getNum
 
-        ; TODO: Poke data
+        ; Convert the string to an int
+        call    str2Int
+
+        pop     hl
+        ld      a, (PM_INT)
+        ld      (hl), a
 
         jr      getAddressInput
 exit:
@@ -20072,6 +20067,23 @@ exit:
         retn
 
         ;
+        ; Print a string terminated with bit-7 set
+        ;
+        ; Input:
+        ;       hl - Pointer to string to print
+        ;
+        ; Output:
+        ;       hl - Pointer string null terminator
+        ;
+print:
+        ld      a, (hl)
+        or      a
+        ret     z
+        inc     hl
+        call    printChar
+        jr      print
+
+        ;
         ; Read a numeric value from the keyboard and display it
         ;
         ; Input:
@@ -20081,8 +20093,6 @@ exit:
         ;       hl - Points to the strings null terminator
         ;
 getNum:
-        ld      b, 5
-getNum_2:
         push    bc
         push    hl
         call    getkey
@@ -20093,14 +20103,14 @@ getNum_2:
         cp      $08
         jr      z, backspace
         cp      '0'
-        jr      c, getNum_2
+        jr      c, getNum
         cp      '9' + 1
-        jr      nc, getNum_2
+        jr      nc, getNum
 
         ld      c, a                    ; Save key
         ld      a, b                    ; Get remaining count
         or      a
-        jr      z, getNum_2             ; If count is zero read keys again
+        jr      z, getNum               ; If count is zero read keys again
 
         dec     b                       ; Decrement count
         ld      a, c                    ; Restore key
@@ -20112,20 +20122,18 @@ getNum_2:
         ; Display the character read from the keyboard
         call    printChar
 
-        jr      getNum_2
+        jr      getNum
 backspace:
         ld      a, (PM_CURSOR)
         and     a
-        jr      z, getNum_2        
+        jr      z, getNum
 
         inc     b                       ; Increase remaining char count
 
         dec     a                       ; Move cursor left
         call    updateCursor
 
-        ld      hl, (PM_STR_PTR)
         dec     hl
-        ld      (PM_STR_PTR), hl
 
         ld      a, '-'
         call    printChar
@@ -20134,7 +20142,7 @@ backspace:
         dec     a
         call    updateCursor
 
-        jr      getNum_2
+        jr      getNum
         
 getNumDone:
         ; Null terminate the string
