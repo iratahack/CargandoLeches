@@ -6,13 +6,26 @@ The turbo loader is in two parts, native command line tools used to create the t
 
 ## Compatibility
 
+### Interrupts
+
 Older games which use a block of 256 $FF's in the Spectrum ROM for their interrupt vector table may not work with this ROM image as this area of the ROM is used by the turbo loader and *pokemon* code.
+
+### ROM Entry Points
+
+Due to the implementation of the turbo loader, some of the ROM entry points have moved to different addresses. Commonly used ROM entry points such as LD-Bytes at $0556 remain at the same location mem ROM.
 
 ## Building
 
 To build the command line tools for converting .tap files to turbo loading .wav or .tzx files and to build the ROM images which include the turbo loader and *pokemon* type `make`.
 
 Z88DK must be installed and included in the path to build the ROM images. To install Z88DK, follow the instructions [here](https://github.com/z88dk/z88dk#installation). GCC is used to build the native tools and must also be included in the path.
+
+### Platforms
+
+The native tools have been built and tested on the following platforms:
+
+* Ubuntu 20.04
+* MinGW x64 from [MSYS2](https://www.msys2.org/)
 
 ## ROM Images
 
