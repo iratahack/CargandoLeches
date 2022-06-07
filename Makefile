@@ -12,3 +12,4 @@ clean:
 
 %.rom: roms/%.asm
 	z88dk-z80asm -mz80 -m -b -o$@ $<
+	./offsetCheck $(@:.rom=.map)

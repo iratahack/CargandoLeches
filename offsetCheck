@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#
+# Script to extract labels in the 'Laaaa' format (where
+# aaaa is the hex address of the label) and compare
+# them against their actual address.
+#
+
+IFS=$'\n'
+for line in `cat leches.map | grep -E "^L" | awk '{printf "%s %s\n", substr($1, 2), substr($3, 2)}' | sort`
+do
+    IFS=$' '
+    arr=($line)
+
+#    echo "${arr[0]} ${arr[1]}"
+
+    if [ "${arr[0]}" != "${arr[1]}" ]
+    then
+        echo "ERROR: Offsets do not match at ${arr[0]}"
+        exit -1
+    fi
+
+done
