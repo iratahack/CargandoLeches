@@ -36,10 +36,18 @@ Pre-built ROM images can be found in the [*binaries*](binaries) folder. For 48K 
 When using emulators like [FUSE](http://fuse-emulator.sourceforge.net/) the fastest loading speeds can be used. But, when using real hardware a lower speed may be required. I have found the following command line options work well when loading via iPhone to a Harlequin 128. Valid speed values are 0-7, the lower the number the faster the load.
 
 ```bash
-./CgLeches <input.tap> <output.wav> 6
+./CgLeches <infile.tap> <outfile.wav> 6
 ```
 
 Type `./CgLeches` to see the built-in help.
+
+Wave files can also be MP3 encoded using LAME. Below is an example of the settings which seem to work well.
+
+```bash
+lame <infile.wav> -m m -f -b 256
+```
+
+If a tape loading error occurs, try hiring and lowering the playback volume.
 
 ## pokemon
 
