@@ -2,8 +2,7 @@
         DEFINE  copymsg
 ;        DEFINE  resetplay
         DEFINE  pokemon
-
-;        OUTPUT  leches.rom
+        DEFINE  leches
 
 ;************************************************************************
 ;** An Assembly File Listing to generate a 16K ROM for the ZX Spectrum **
@@ -1766,7 +1765,12 @@ L0556:  INC     D                       ; reset the zero flag without disturbing
         IN      A, ($FE)                ; read the ear state - bit 6.
         RRA                             ; rotate to bit 5.
         AND     $20                     ; isolate this bit.
+IFDEF leches
         CALL    ULTRA
+ELSE
+        OR      $02                     ; combine with red border colour.
+        LD      C,A                     ; and store initial state long-term in C.
+ENDIF
         CP      A                       ; set the zero flag.
 
 ;
@@ -7308,13 +7312,7 @@ L1881:  PUSH    DE                      ; save flag E for a return value.
 IFDEF   easy
         call    IMPOSE
         jp      L1894
-        nop
-        nop
-        nop
-        nop
-        nop
-        nop
-        nop
+        DEFS    $1894-$, $00
 ELSE
         LD      HL, $5C3B               ; point to FLAGS.
         RES     2, (HL)                 ; signal 'K' mode. (starts before keyword)
@@ -16764,6 +16762,7 @@ L32B7:  RST     28H                     ;; FP-CALC          x.
 
         RET                             ; return.
 
+IFDEF leches
 L32BF:  INC     H                       ;4
         JR      NC, L32CD               ;7/12     46/48
         XOR     B                       ;4
@@ -16782,6 +16781,8 @@ L32CD:  XOR     B                       ;4
         OUT     ($FE), A                ;11
         IN      L, (C)                  ;12
         JP      (HL)                    ;4
+ENDIF
+        DEFS    $32d7-$, $FF
 
 ; ---------------------------------
 ; Move a floating point number (31)
@@ -16895,9 +16896,11 @@ L32EF:  RST     28H                     ;; FP-CALC      x.
 
         RET                             ; return.
 
-
+IFDEF leches
 L32FF:  IN      L, (C)
         JP      (HL)
+ENDIF
+        DEFS    $3302-$, $FF
 
 ; ---------------------------------
 ; THE 'TEST FIVE SPACES' SUBROUTINE
@@ -16917,6 +16920,7 @@ L3302:  PUSH    DE                      ; save
         POP     DE                      ; registers.
         RET                             ; return with BC set at 5.
 
+IFDEF leches
         DEFB    $EC, $EC, $01           ; 0D
         DEFB    $EC, $EC, $02           ; 10
         DEFB    $EC, $EC, $03           ; 13
@@ -16980,7 +16984,7 @@ L3302:  PUSH    DE                      ; save
 
 L33BF:  IN      L, (C)
         JP      (HL)
-
+ENDIF
         DEFS    $33e0-$, $FF
 ; ------------------------
 ; THE 'TABLE OF CONSTANTS'
@@ -17045,6 +17049,7 @@ L33F4:  LD      A, (DE)                 ; each byte of second
 
         RET                             ; return.
 
+IFDEF leches
 L33FF:  LD      A, R                    ;9        49 (41 sin borde)
         LD      L, A                    ;4
         LD      B, (HL)                 ;7
@@ -17055,6 +17060,8 @@ L3403:  LD      A, IXL                  ;8
         DEC     H                       ;4
         IN      L, (C)                  ;12
         JP      (HL)                    ;4
+ENDIF
+        DEFS    $340d-$, $FF
 
 ; --------------
 ; The Calculator
@@ -18307,9 +18314,11 @@ L36B3:  LD      DE, ($5C65)             ; Load destination from STKEND system va
 
         RET                             ; Return.
 
-
+IFDEF leches
 L36BF:  IN      L, (C)
         JP      (HL)
+ENDIF
+        DEFS    $36c2-$, $FF
 
 ; --------------------------
 ; THE 'SQUARE ROOT' FUNCTION
@@ -18426,6 +18435,7 @@ L36E6:  PUSH    HL                      ; save the result pointer.
         POP     HL                      ; restore original result pointer
         RET                             ; return.
 
+IFDEF leches
 L36F5:  XOR     B
         ADD     A, A
         RET     C
@@ -18516,6 +18526,8 @@ L37C3:  LD      A, IXL
         DEC     H
         IN      L, (C)
         JP      (HL)
+ENDIF
+    DEFS    $37cd-$, $FF
 
 ; ----------------------------------
 ; Storage of numbers in 5 byte form.
@@ -18659,9 +18671,24 @@ L37F7:  DEC     HL                      ; address 3rd byte
         POP     DE                      ; restore initial DE.
         RET                             ; return.
 
+IFDEF leches
 L37FF:  IN      L, (C)
         JP      (HL)
 
+        ; Support entry points:
+        ;   $32BF
+        ;   $32FF
+        ;   $33BF
+        ;   $33FF
+        ;   $36BF
+        ;   $36FF
+        ;   $37BF
+        ;   $37FF
+        ;
+        ; Tables:
+        ;   $330D
+        ;   $370D
+        ;
 ;3802
 ULTRA:  PUSH    IX                      ; 133 bytes
         POP     HL                      ; pongo la direccion de comienzo en HL
@@ -18740,7 +18767,7 @@ ULTR9:  XOR     (HL)
         RET     NZ                      ; si no coincide el checksum salgo con Carry desactivado
         SCF
         RET
-
+ENDIF
         DEFS    $389f-$, $FF
 
 ; ------------------------
@@ -19202,6 +19229,7 @@ L39E7:  DEFB    $38                     ;;end-calc        quadrants II and III c
 
         RET                             ; return.
 
+IFDEF leches
 ;GET16
 L39E9:  LD      B, 0                    ; 16 bytes
         CALL    L05ED                   ; esta rutina lee 2 pulsos e inicializa el contador de pulsos
@@ -19214,6 +19242,8 @@ L39E9:  LD      B, 0                    ; 16 bytes
 
         DEFB    "leches"                ; 6 bytes
         DEFB    $FF, $FF                ;
+ENDIF
+        DEFS    $3a01-$, $FF
 
 ;****************************************
 ;** Part 10. FLOATING-POINT CALCULATOR **
@@ -19523,6 +19553,7 @@ IMPOSE: ld      hl, $5c3b               ; point to FLAGS. (IY+$01)
         set     3, (hl)                 ; permant flag 'L' mode
         set     2, (hl)                 ; temporary flag built up by line
         bit     5, (iy+$30)             ; Test NEW FLAG
+        ret
         ret     z                       ; Leave as 'L'
         jp      z, $ffff
         bit     5, (iy+$37)             ; test FLAGX - input mode ?
@@ -19568,8 +19599,8 @@ CHAR0:  ld      b, 0
         ld      c, b
 CHAR1:  push    ix                      ; Transfer the start of current token
         pop     de                      ; to the DE register.
-L3:     ld      a, (hl)                 ; Get edit line character.
-L4:     cp      $0d                     ; Carriage return?
+i_3:    ld      a, (hl)                 ; Get edit line character.
+        cp      $0d                     ; Carriage return?
         jr      z, EOL                  ; End of edit line - next token
         cp      $EA                     ; Is token REM ?
         jr      z, EOL                  ; Treat same as end of line - no more tokens.
@@ -19590,7 +19621,7 @@ NOT_AZ: ex      de, hl                  ; Switch in first character of token
         ex      de, hl                  ; Switch out.
         jr      z, MATCH1               ; Forward if first character matches.
 SKIP:   inc     hl                      ; Address next character in edit line
-        jr      L3                      ; Back - check next character against 1st char.
+        jr      i_3                     ; Back - check next character against 1st char.
 
 ;   The first characters match.
 
@@ -19885,6 +19916,13 @@ updateCursor:
         pop     hl
         ret
 
+cursorOff:
+        ld      hl, (PM_CURSOR)         ; Get the old cursor location
+        ld      h, $58                  ; Upper 8-bits of screen attribute memory
+
+        ld      (hl), $39               ; Paper white, ink blue
+        ret
+
 prompt:
         DEFB    "-----", '\r', $00
 ENDIF
@@ -20044,6 +20082,7 @@ p1:
 
         jr      getAddressInput
 exit:
+        call    cursorOff
         ; Restore registers
         pop     hl
         pop     de
@@ -21461,3 +21500,4 @@ L3D00:  DEFB    %00000000
 ; Andrew Owen               for ZASM compatibility and format improvements.
 ; Francisco Villa           for CgLeches main ultraloader code.
 ; Antonio Villena           for CgLeches rest of code.
+; Craig Hackney             for refactoring pokemom to not enable interrupts or use system vars.
