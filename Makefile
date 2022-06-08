@@ -9,6 +9,7 @@ clean:
 
 %:src/%.c
 	gcc -Wall -O2 $< -o $@
+	strip $@
 
 %.rom: roms/%.asm
 	z88dk-z80asm -mz80 -m -b -o$@ $<
