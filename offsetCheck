@@ -7,7 +7,7 @@
 #
 
 IFS=$'\n'
-for line in `cat leches.map | grep -E "^L" | awk '{printf "%s %s\n", substr($1, 2), substr($3, 2)}' | sort`
+for line in `cat leches.map | grep -E "^L[0-9][A-F]{4}" | awk '{printf "%s %s\n", substr($1, 2), substr($3, 2)}' | sort`
 do
     IFS=$' '
     arr=($line)
@@ -16,7 +16,7 @@ do
 
     if [ "${arr[0]}" != "${arr[1]}" ]
     then
-        echo "ERROR: Offsets do not match at ${arr[0]}"
+        echo "ERROR: Offsets do not match at ${arr[1]}"
         exit -1
     fi
 
