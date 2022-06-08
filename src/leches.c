@@ -213,6 +213,5 @@ int main(int argc, char *argv[])
     }
     fclose(inFile);
     fclose(outFile);
-    printf("\nFile generated successfully\n");
     exit(0);
 }

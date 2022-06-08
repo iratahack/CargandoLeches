@@ -8,7 +8,7 @@ clean:
 	rm -rf $(EXES) $(ROMS) roms/*.o *.map
 
 %:src/%.c
-	gcc -O2 $< -o $@
+	gcc -Wall -O2 $< -o $@
 
 %.rom: roms/%.asm
 	z88dk-z80asm -mz80 -m -b -o$@ $<
