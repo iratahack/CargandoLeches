@@ -38,7 +38,7 @@
 ;    Note.  Deprecated lines may appear in red.
 ;    In HTML, new lines appear in blue.
 
-ORG 0000
+        ORG 0000
 
 ;*****************************************
 ;** Part 1. RESTART ROUTINES AND TABLES **
@@ -21872,7 +21872,7 @@ L3D00:  DEFB    %00000000
         DEFB    %00111100
 
 
-#end                            ; generic cross-assembler directive 
+; #end                            ; generic cross-assembler directive 
 
 ; Acknowledgements
 ; -----------------

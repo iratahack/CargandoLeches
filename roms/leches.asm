@@ -36,13 +36,13 @@
 ;; START
 L0000:  DI                              ; Disable Interrupts.
         XOR     A                       ; Signal coming from START.
-IFDEF   resetplay
+ IFDEF   resetplay
         LD      HL, $FFFF               ; Set pointer to top of possible physical RAM.
         JP      L11C8                   ; Jump forward to common code at START-NEW.
-ELSE
+ ELSE
         LD      DE, $FFFF               ; Set pointer to top of possible physical RAM.
         JP      L11CB                   ; Jump forward to common code at START-NEW.
-ENDIF
+ ENDIF
 
 ; -------------------
 ; THE 'ERROR' RESTART
@@ -247,9 +247,9 @@ L005F:  DEFB    $FF, $FF, $FF           ; Unused locations
         DEFB    $FF                     ; NMI routine.
 
 L0066:
-IFDEF   pokemon
+ IFDEF   pokemon
         jp      poke
-ELSE
+ ELSE
         push    AF
         PUSH    HL                      ; registers.
         LD      HL, ($5CB0)             ; fetch the system variable NMIADD.
@@ -264,7 +264,7 @@ ELSE
 L0070:  POP     HL                      ; restore the
         POP     AF                      ; registers.
         RETN                            ; return to previous interrupt state.
-ENDIF
+ ENDIF
 
         DEFS    $0074-$, $FF
 
@@ -1765,12 +1765,12 @@ L0556:  INC     D                       ; reset the zero flag without disturbing
         IN      A, ($FE)                ; read the ear state - bit 6.
         RRA                             ; rotate to bit 5.
         AND     $20                     ; isolate this bit.
-IFDEF leches
+ IFDEF leches
         CALL    ULTRA
-ELSE
+ ELSE
         OR      $02                     ; combine with red border colour.
         LD      C,A                     ; and store initial state long-term in C.
-ENDIF
+ ENDIF
         CP      A                       ; set the zero flag.
 
 ;
@@ -5400,7 +5400,7 @@ L11A7:  LD      A, (HL)                 ; fetch character
 ;   available to store 3 persistent 16-bit system variables.
 
 ;; NEW
-IFDEF   resetplay
+ IFDEF   resetplay
 L11B7:  DI                              ; Disable Interrupts - machine stack will be
                                 ; cleared.
         LD      HL, ($5CB2)             ; Fetch RAMTOP as top value.
@@ -5595,7 +5595,7 @@ L1201:  LD      ($5CB2), HL             ; set system variable RAMTOP to HL.
                                         ; 32 bytes
 
 L129D:  DEFB    $EF, $22, $22, $0D, $80 ; LOAD "" + Enter + $80
-ELSE
+ ELSE
 L11B7:  DI                              ; Disable Interrupts - machine stack will be
                                 ; cleared.
         LD      A, $FF                  ; Flag coming from NEW.
@@ -5808,7 +5808,7 @@ L121C:
                                 ; require clearing.
 
         JR      L12A9                   ; forward to MAIN-1
-ENDIF
+ ENDIF
 
 ; -------------------------
 ; THE 'MAIN EXECUTION LOOP'
@@ -5829,15 +5829,15 @@ L12AC:  LD      A, $00                  ; select channel 'K' the keyboard
 
         CALL    L1601                   ; routine CHAN-OPEN opens it
 
-IFDEF   easy
+ IFDEF   easy
         call    NEWED                   ;+ Call the New Editor.
-ELSE
+ ELSE
         CALL    L0F2C                   ; routine EDITOR is called.
                                 ; Note the above routine is where the Spectrum
                                 ; waits for user-interaction. Perhaps the
                                 ; most common input at this stage
                                 ; is LOAD "".
-ENDIF
+ ENDIF
 
         CALL    L1B17                   ; routine LINE-SCAN scans the input.
 
@@ -5859,17 +5859,17 @@ ENDIF
 
 ;; MAIN-3
 L12CF:
-IFDEF   easy
+ IFDEF   easy
         nop
         nop
         ld      (iy+$07), 0             ;+ Set MODE to 'KLC' ( not extended or graph)
-ELSE
+ ELSE
         jp      L12D5
         nop
         nop
         nop
 L12D5:
-ENDIF
+ ENDIF
 
         CALL    L19FB                   ; routine E-LINE-NO will fetch any line
                                 ; number to BC if this is a program line.
@@ -6097,18 +6097,18 @@ L1391:  DEFB    $80
 L1537:  DEFB    ',', ' '+$80            ; used in report line.
 ;; copyright
 L1539:
-IFDEF   resetplay
+ IFDEF   resetplay
         DEFB    "Press PLAY or SPACE to brea"
         DEFB    'k'+$80
-ELSE
+ ELSE
         DEFB    $7F                     ; copyright
-  IFDEF copymsg
+   IFDEF copymsg
         DEFB    " 2012 CgLeches Research Lt"
-  ELSE
+   ELSE
         DEFB    " 1982 Sinclair Research Lt"
-  ENDIF
+   ENDIF
         DEFB    'd'+$80
-ENDIF
+ ENDIF
 
 ; -------------
 ; REPORT-G
@@ -7309,18 +7309,18 @@ L1881:  PUSH    DE                      ; save flag E for a return value.
         EX      DE, HL                  ; save HL address in DE.
         RES     2, (IY+$30)             ; update FLAGS2 - signal NOT in QUOTES.
 
-IFDEF   easy
+ IFDEF   easy
         call    IMPOSE
         jp      L1894
         DEFS    $1894-$, $00
-ELSE
+ ELSE
         LD      HL, $5C3B               ; point to FLAGS.
         RES     2, (HL)                 ; signal 'K' mode. (starts before keyword)
         BIT     5, (IY+$37)             ; test FLAGX - input mode ?
         JR      Z, L1894                ; forward to OUT-LINE4 if not.
 
         SET     2, (HL)                 ; signal 'L' mode. (used for input)
-ENDIF
+ ENDIF
 
 ;; OUT-LINE4
 L1894:  LD      HL, ($5C5F)             ; fetch X_PTR - possibly the error pointer
@@ -7567,14 +7567,14 @@ L1937:  CALL    L2D1B                   ; routine NUMERIC tests if it is a digit
         CP      $21                     ; less than quote character ?
         JR      C, L196C                ; to OUT-CH-3 to output controls and space.
 
-IFDEF   easy
+ IFDEF   easy
         call    IMPOSE
         nop
-ELSE
+ ELSE
         RES     2, (IY+$01)             ; initialize FLAGS to 'K' mode and leave
                                 ; unchanged if this character would precede
                                 ; a keyword.
-ENDIF
+ ENDIF
 
         CP      $CB                     ; is character 'THEN' token ?
         JR      Z, L196C                ; to OUT-CH-3 to output if so.
@@ -16762,7 +16762,7 @@ L32B7:  RST     28H                     ;; FP-CALC          x.
 
         RET                             ; return.
 
-IFDEF leches
+ IFDEF leches
 L32BF:  INC     H                       ;4
         JR      NC, L32CD               ;7/12     46/48
         XOR     B                       ;4
@@ -16781,7 +16781,7 @@ L32CD:  XOR     B                       ;4
         OUT     ($FE), A                ;11
         IN      L, (C)                  ;12
         JP      (HL)                    ;4
-ENDIF
+ ENDIF
         DEFS    $32d7-$, $FF
 
 ; ---------------------------------
@@ -16896,10 +16896,10 @@ L32EF:  RST     28H                     ;; FP-CALC      x.
 
         RET                             ; return.
 
-IFDEF leches
+ IFDEF leches
 L32FF:  IN      L, (C)
         JP      (HL)
-ENDIF
+ ENDIF
         DEFS    $3302-$, $FF
 
 ; ---------------------------------
@@ -16920,7 +16920,7 @@ L3302:  PUSH    DE                      ; save
         POP     DE                      ; registers.
         RET                             ; return with BC set at 5.
 
-IFDEF leches
+ IFDEF leches
         DEFB    $EC, $EC, $01           ; 0D
         DEFB    $EC, $EC, $02           ; 10
         DEFB    $EC, $EC, $03           ; 13
@@ -16984,7 +16984,7 @@ IFDEF leches
 
 L33BF:  IN      L, (C)
         JP      (HL)
-ENDIF
+ ENDIF
         DEFS    $33e0-$, $FF
 ; ------------------------
 ; THE 'TABLE OF CONSTANTS'
@@ -17049,7 +17049,7 @@ L33F4:  LD      A, (DE)                 ; each byte of second
 
         RET                             ; return.
 
-IFDEF leches
+ IFDEF leches
 L33FF:  LD      A, R                    ;9        49 (41 sin borde)
         LD      L, A                    ;4
         LD      B, (HL)                 ;7
@@ -17060,7 +17060,7 @@ L3403:  LD      A, IXL                  ;8
         DEC     H                       ;4
         IN      L, (C)                  ;12
         JP      (HL)                    ;4
-ENDIF
+ ENDIF
         DEFS    $340d-$, $FF
 
 ; --------------
@@ -18314,10 +18314,10 @@ L36B3:  LD      DE, ($5C65)             ; Load destination from STKEND system va
 
         RET                             ; Return.
 
-IFDEF leches
+ IFDEF leches
 L36BF:  IN      L, (C)
         JP      (HL)
-ENDIF
+ ENDIF
         DEFS    $36c2-$, $FF
 
 ; --------------------------
@@ -18435,7 +18435,7 @@ L36E6:  PUSH    HL                      ; save the result pointer.
         POP     HL                      ; restore original result pointer
         RET                             ; return.
 
-IFDEF leches
+ IFDEF leches
 L36F5:  XOR     B
         ADD     A, A
         RET     C
@@ -18526,7 +18526,7 @@ L37C3:  LD      A, IXL
         DEC     H
         IN      L, (C)
         JP      (HL)
-ENDIF
+ ENDIF
     DEFS    $37cd-$, $FF
 
 ; ----------------------------------
@@ -18671,7 +18671,7 @@ L37F7:  DEC     HL                      ; address 3rd byte
         POP     DE                      ; restore initial DE.
         RET                             ; return.
 
-IFDEF leches
+ IFDEF leches
 L37FF:  IN      L, (C)
         JP      (HL)
 
@@ -18767,7 +18767,7 @@ ULTR9:  XOR     (HL)
         RET     NZ                      ; si no coincide el checksum salgo con Carry desactivado
         SCF
         RET
-ENDIF
+ ENDIF
         DEFS    $389f-$, $FF
 
 ; ------------------------
@@ -19229,7 +19229,7 @@ L39E7:  DEFB    $38                     ;;end-calc        quadrants II and III c
 
         RET                             ; return.
 
-IFDEF leches
+ IFDEF leches
 ;GET16
 L39E9:  LD      B, 0                    ; 16 bytes
         CALL    L05ED                   ; esta rutina lee 2 pulsos e inicializa el contador de pulsos
@@ -19242,7 +19242,7 @@ L39E9:  LD      B, 0                    ; 16 bytes
 
         DEFB    "leches"                ; 6 bytes
         DEFB    $FF, $FF                ;
-ENDIF
+ ENDIF
         DEFS    $3a01-$, $FF
 
 ;****************************************
@@ -19544,7 +19544,7 @@ L3AE6:  PUSH    DE                      ; save STKEND
         POP     HL                      ; original STKEND is now RESULT pointer.
         RET                             ; return.
 
-IFDEF   easy
+ IFDEF   easy
 ; -------------------------------------------------------------------------
 ;  Impose flags on secondary flags. It is OK to use HL register. (20 bytes)
 ; -------------------------------------------------------------------------
@@ -19743,9 +19743,9 @@ UCASE:  call    L2C8D                   ;+ ROM routine ALPHA.
         set     7, c                    ;+ invert flag if alpha
         ret                             ;+ Return.
 
-ENDIF
+ ENDIF
 
-IFDEF   pokemon
+ IFDEF   pokemon
         ;
         ; Convert a 16-bit integer to a decimal ASCII string
         ;
@@ -19925,7 +19925,7 @@ cursorOff:
 
 prompt:
         DEFB    "-----", '\r', $00
-ENDIF
+ ENDIF
         DEFS    $3bc0-$, $FF
 ; ------------------------------
 ; THE 'SERIES GENERATOR' ROUTINE
@@ -20006,12 +20006,12 @@ L3BCA:  DEFB    $31                     ;;duplicate       v,v.
         RET                             ; return with H'L' pointing to location
                                 ; after last number in series.
 
-IFDEF   pokemon
-        defc    PM_VARS=$5800
-        defc    SP_SAVE=PM_VARS-2
-        defc    PM_CURSOR=SP_SAVE-1
-        defc    PM_STRING=PM_CURSOR-8
-        defc    PM_STACK=PM_STRING
+ IFDEF   pokemon
+PM_VARS     EQU $5800
+SP_SAVE     EQU PM_VARS-2
+PM_CURSOR   EQU SP_SAVE-1
+PM_STRING   EQU PM_CURSOR-8
+PM_STACK    EQU PM_STRING
 poke:
         ld      (SP_SAVE), sp           ; Save the current stack pointer
         ld      sp, PM_STACK            ; Use the end of screen memory for stack space
@@ -20177,7 +20177,7 @@ getNumDone:
         ; Null terminate the string
         ld      (hl), 0
 
-        ld      a, '\r'
+        ld      a, $0D
         call    printChar
         ret
 
@@ -20230,7 +20230,7 @@ printChar:
         push    bc
         push    hl
 
-        cp      '\r'
+        cp      $0D
         jr      nz, printChar_1
 
         xor     a
@@ -20272,7 +20272,7 @@ printCharDone:
         pop     bc
         pop     af
         ret
-ELSE
+ ELSE
         DEFS    $3c04-$, $FF
 ; -----------------------
 ; TV TUNER VECTOR ENTRIES
@@ -20419,7 +20419,7 @@ L3C8F:  DEFB    $13, $00                ; Bright, off
 ; UNUSED
 ; ------
 
-ENDIF
+ ENDIF
 
         DEFS    $3d00-$, $FF
 ; -------------------------------

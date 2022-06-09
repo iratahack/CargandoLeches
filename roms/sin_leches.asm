@@ -1,7 +1,7 @@
         DEFINE  easy
         DEFINE  resetplay
         DEFINE  pokemon
-        defc  lenp=$c0       ; $40 if ZX Spectrum 16K
+lenp    EQU $c0       ; $40 if ZX Spectrum 16K
 
 ;        OUTPUT  48.rom
 
@@ -19526,7 +19526,7 @@ UCASE:  call    L2C8D           ;+ ROM routine ALPHA.
         defs   $3948-$, $ff
 
       IFDEF pokemon
-        defc  caden=$5800-6
+caden   EQU $5800-6
 poke:
         ld      (caden-2), sp
         ld      sp, caden-15-1
