@@ -19857,37 +19857,32 @@ bin2BCD_2:
         ;       bc - 16-bit integer
         ;
 str2Int:
-        ld      de, $0001               ; Multiplier
-        ld      b, d
-        ld      c, d
+        ld      bc, $0000               ; Zero result
 nextDigit:
-        ; Check for empty string
-        ld      a, l
-        cp      PM_STRING&$FF
+        ld      a, (hl)
+        or      a
         ret     z
-
-        dec     hl
-        ld      a, (hl)                 ; 1's, 10's, 100's, 1000's, 10,000's
         sub     '0'                     ; Convert to binary
+        inc     hl                      ; On to the next digit
 
-        push    hl
-
-        ld      h, 0
-        ld      l, a
-
-        ; Multiple by multiplier
-        call    L30A9                   ; HL=HL*DE (ROM)
-
-        add     hl, bc
-        ld      bc, hl
-
-        ; Multiply the multiplier by 10
-        ld      hl, $000a
-        call    L30A9                   ; HL=HL*DE (ROM)
+        push    hl                      ; Save string pointer
 
         ex      de, hl
 
-        pop     hl
+        ld      h, 0
+        ld      l, a
+        add     hl, bc                  ; Add digit with result
+
+        ld      a, (de)
+        or      a
+        jr      z, skipMultiply         ; Skip multiply if last digit
+
+        ld      de, $000a               ; Multiplier
+        call    L30A9                   ; HL=HL*DE (ROM)
+
+skipMultiply:
+        ld      bc, hl
+        pop     hl                      ; Restore string pointer
 
         jr      nextDigit
 
@@ -20048,6 +20043,7 @@ p1:
         jr      z, exit
 
         ; Convert the string to an int
+        ld      hl, PM_STRING
         call    str2Int
 
         ; Peek the data at the specified address
@@ -20074,6 +20070,7 @@ p1:
         call    getNum
 
         ; Convert the string to an int
+        ld      hl, PM_STRING
         call    str2Int
 
         pop     hl
