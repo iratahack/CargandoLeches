@@ -248,7 +248,11 @@ L005F:  DEFB    $FF, $FF, $FF           ; Unused locations
 
 L0066:
  IFDEF   pokemon
-        jp      poke
+        PUSH    AF                      ; For compatability with DIVMMC, etc.
+                                        ; PUSH AF just like the original ROM.
+        CALL    poke
+        POP     AF                      ; POP AF just like the original ROM.
+        RETN
  ELSE
         push    AF
         PUSH    HL                      ; registers.
@@ -20090,7 +20094,7 @@ exit:
 
         ; Restore stack pointer
         ld      sp, (SP_SAVE)
-        retn
+        ret
 
         ;
         ; Print a string terminated with null
